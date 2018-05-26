@@ -17,12 +17,12 @@ Customize string on the right/left side of the line number.
 ```
 
 List of face you can customize.
-`line-reminder:modified-sign-face`
-`line-reminder:saved-sign-face`
+* `line-reminder:modified-sign-face`
+* `line-reminder:saved-sign-face`
 
 
 ## Usage ##
-Add this line of code into you Emacs init file.
+Add this line of code into you Emacs init file.<br/>
 `(setq linum-format 'line-reminder:linum-format)`
 
 
