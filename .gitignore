@@ -1,6 +1,7 @@
 # ignore these directories.
 /.git
 /recipes
+/test
 line-reminder-pkg.el
 
 # ignore generated files.
