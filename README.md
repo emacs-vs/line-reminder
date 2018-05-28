@@ -5,25 +5,39 @@ Remind current line status by current buffer.<br/><br/>
 
 ## Configuration ##
 Customize the modified sign.
-`(setq line-reminder:modified-sign "▐")`
+`(setq line-reminder-modified-sign "▐")`
 
 Customize the saved sign.
-`(setq line-reminder:saved-sign "▐")`
+`(setq line-reminder-saved-sign "▐")`
 
 Customize string on the right/left side of the line number.
 ```
-(setq line-reminder:linum-left-string "")
-(setq line-reminder:linum-right-string "  ")
+(setq line-reminder-linum-left-string "")
+(setq line-reminder-linum-right-string "  ")
 ```
 
 List of face you can customize.
 * `line-reminder:modified-sign-face`
 * `line-reminder:saved-sign-face`
 
+Buffer Name List that you do not want this mode to take effect.
+```
+(setq line-reminder-ignore-buffer-names '("*Buffer List*"
+                                          "*Checkdoc Status*"
+                                          "*Echo Area 0*"
+                                          "*helm "
+                                          "magit"
+                                          "*run*"
+                                          "*shell*"
+                                          "*undo-tree*"))
+```
+
 
 ## Usage ##
 Add this line of code into you Emacs init file.<br/>
-`(setq linum-format 'line-reminder:linum-format)`
+```
+(global-line-reminder-mode t)
+```
 
 
 ## Screenshot ##
