@@ -87,6 +87,11 @@
   :group 'line-reminder
   :type 'list)
 
+(defvar line-reminder-mouse-input-line-limit 10000
+  "When `after-change-functions''s BEGIN or END is higher than this limit \
+will crash.
+Set this limit so it will not crash.")
+
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
@@ -101,6 +106,12 @@
 
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
+
+(defun line-reminder-total-line ()
+  "Return current buffer's maxinum line."
+  (save-excursion
+    (goto-char (point-max))
+    (line-reminder-get-current-line-integer)))
 
 (defun line-reminder-is-contain-list-string (in-list in-str)
   "Check if a string contain in any string in the string list.
@@ -272,14 +283,20 @@ END : end of the changes."
         ;; `begin-linum' and `end-linum' the same meaning there is no line
         ;; inserted or removed.
         (unless (= begin-linum end-linum)
-          (let ((current-linum begin-linum))
-            (while (<= current-linum end-linum)
+          (let ((current-linum begin-linum)
+                (reach-last-line-in-buffer nil))
+            (while (and (<= current-linum end-linum)
+                        ;; Cannot be the same as last line in buffer.
+                        (not reach-last-line-in-buffer))
               (setq-local line-reminder-change-lines
                           (remove current-linum line-reminder-change-lines))
               (setq-local line-reminder-saved-lines
                           (remove current-linum line-reminder-saved-lines))
               (forward-line 1)
-              (setq current-linum (line-reminder-get-current-line-integer)))))
+              (setq current-linum (line-reminder-get-current-line-integer))
+              ;; Check if current linum last line in buffer
+              (when (= current-linum (line-reminder-total-line))
+                (setq reach-last-line-in-buffer t)))))
         (delete-dups line-reminder-change-lines)))))
 
 (defun line-reminder-after-change-functions (begin end length)
@@ -349,11 +366,18 @@ LENGTH : deletion length."
                 ;; Adding line. (After adding line/lines, we just need to loop
                 ;; throught those lines and add it to `line-reminder-change-lines'
                 ;; list.)
-                (let ((current-linum begin-linum))
-                  (while (<= current-linum end-linum)
+                (let ((current-linum begin-linum)
+                      (reach-last-line-in-buffer nil))
+                  (while (and (<= current-linum end-linum)
+                              ;; Cannot be the same as last line in buffer.
+                              (not reach-last-line-in-buffer))
                     (push current-linum line-reminder-change-lines)
                     (forward-line 1)
-                    (setq current-linum (line-reminder-get-current-line-integer))))))
+                    (setq current-linum (line-reminder-get-current-line-integer))
+
+                    ;; Check if current linum last line in buffer
+                    (when (= current-linum (line-reminder-total-line))
+                      (setq reach-last-line-in-buffer t))))))
           ;; Just add the current line.
           (push begin-linum line-reminder-change-lines))
         (delete-dups line-reminder-change-lines)))))
