@@ -312,48 +312,51 @@ LENGTH : deletion length."
         (goto-char begin)
         (setq begin-linum (line-reminder-get-current-line-integer))
 
-        (when (or (not (= begin-linum end-linum))
-                  (not (= line-reminder-delta-line-count 0)))
-          ;; Get delta line count. (Either adding/deleting lines)
-          (if is-deleting-line
-              ;; We use local variable `line-reminder-delta-line-count' here,
-              ;; because after deleting we do not know how many lines are
-              ;; deleted. Only way to find out is to get the information from
-              ;; `before-change-functions' hook and use it here.
-              (setq delta-line-count line-reminder-delta-line-count)
-            ;; Notice, we cannot get the deletion lines infromation from here.
-            ;; Fortunately, adding lines/newline can be calculated here by just
-            ;; Minusing `end-linum' and `begin-linum'.
-            (setq delta-line-count (- end-linum begin-linum)))
+        (if (or (not (= begin-linum end-linum))
+                (not (= line-reminder-delta-line-count 0)))
+            (progn
+              ;; Get delta line count. (Either adding/deleting lines)
+              (if is-deleting-line
+                  ;; We use local variable `line-reminder-delta-line-count' here,
+                  ;; because after deleting we do not know how many lines are
+                  ;; deleted. Only way to find out is to get the information from
+                  ;; `before-change-functions' hook and use it here.
+                  (setq delta-line-count line-reminder-delta-line-count)
+                ;; Notice, we cannot get the deletion lines infromation from here.
+                ;; Fortunately, adding lines/newline can be calculated here by just
+                ;; Minusing `end-linum' and `begin-linum'.
+                (setq delta-line-count (- end-linum begin-linum)))
 
-          ;; Bound is also the beginning of the line number.
-          (setq bound-current-line begin-linum)
+              ;; Bound is also the beginning of the line number.
+              (setq bound-current-line begin-linum)
 
-          ;; Add up delta line count to `change-lines' list.
-          (setq line-reminder-change-lines
-                (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
-                                                         bound-current-line
-                                                         delta-line-count))
-          ;; Add up delta line count to `saved-lines' list.
-          (setq line-reminder-saved-lines
-                (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
-                                                         bound-current-line
-                                                         delta-line-count))
+              ;; Add up delta line count to `change-lines' list.
+              (setq line-reminder-change-lines
+                    (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
+                                                             bound-current-line
+                                                             delta-line-count))
+              ;; Add up delta line count to `saved-lines' list.
+              (setq line-reminder-saved-lines
+                    (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
+                                                             bound-current-line
+                                                             delta-line-count))
 
-          (if is-deleting-line
-              ;; Deleting line. (After deleting line/lines, we just need
-              ;; to push the current line to `line-reminder-change-lines',
-              ;; which is also the beginning of line.)
-              (push begin-linum line-reminder-change-lines)
-            ;; Adding line. (After adding line/lines, we just need to loop
-            ;; throught those lines and add it to `line-reminder-change-lines'
-            ;; list.)
-            (let ((current-linum begin-linum))
-              (while (<= current-linum end-linum)
-                (push current-linum line-reminder-change-lines)
-                (forward-line 1)
-                (setq current-linum (line-reminder-get-current-line-integer)))))
-          (delete-dups line-reminder-change-lines))))))
+              (if is-deleting-line
+                  ;; Deleting line. (After deleting line/lines, we just need
+                  ;; to push the current line to `line-reminder-change-lines',
+                  ;; which is also the beginning of line.)
+                  (push begin-linum line-reminder-change-lines)
+                ;; Adding line. (After adding line/lines, we just need to loop
+                ;; throught those lines and add it to `line-reminder-change-lines'
+                ;; list.)
+                (let ((current-linum begin-linum))
+                  (while (<= current-linum end-linum)
+                    (push current-linum line-reminder-change-lines)
+                    (forward-line 1)
+                    (setq current-linum (line-reminder-get-current-line-integer))))))
+          ;; Just add the current line.
+          (push begin-linum line-reminder-change-lines))
+        (delete-dups line-reminder-change-lines))))))
 
 
 (defun line-reminder-enable ()
