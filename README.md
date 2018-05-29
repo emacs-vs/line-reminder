@@ -34,9 +34,13 @@ Buffer Name List that you do not want this mode to take effect.
 
 
 ## Usage ##
-Add this line of code into you Emacs init file.<br/>
+Enable for all buffers.
 ```
 (global-line-reminder-mode t)
+```
+Or you can just enable in specific buffer you want.
+```
+(line-reminder-mode t)
 ```
 
 ## Screenshot ##
