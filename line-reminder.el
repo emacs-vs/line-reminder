@@ -5,7 +5,7 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Remind current line status by current buffer.
-;; Keyword: customize font ttf
+;; Keyword: annotation linum reminder
 ;; Version: 0.0.1
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
