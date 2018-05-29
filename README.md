@@ -39,8 +39,8 @@ Add this line of code into you Emacs init file.<br/>
 (global-line-reminder-mode t)
 ```
 
-
 ## Screenshot ##
+<img src="./screenshot/line-reminder-demo1.png"/>
 
 
 ## Contribution ##
