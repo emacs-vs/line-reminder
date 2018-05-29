@@ -5,15 +5,19 @@ Remind current line status by current buffer.<br/><br/>
 
 ## Configuration ##
 Customize the modified sign.
-`(setq line-reminder-modified-sign "▐")`
+```
+(setq line-reminder-modified-sign "▐")
+```
 
 Customize the saved sign.
-`(setq line-reminder-saved-sign "▐")`
+```
+(setq line-reminder-saved-sign "▐")
+```
 
 Customize string on the right/left side of the line number.
 ```
 (setq line-reminder-linum-left-string "")
-(setq line-reminder-linum-right-string "  ")
+(setq line-reminder-linum-right-string " ")
 ```
 
 List of face you can customize.
@@ -44,7 +48,9 @@ Or you can just enable in specific buffer you want.
 ```
 
 ## Screenshot ##
-<img src="./screenshot/line-reminder-demo1.png"/>
+Line Reminder in Emacs Comparison                                                     | Visual Studio Comparison                                                          |
+:------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
+<img src="./screenshot/line-reminder-emacs-comparison.png" width="330" height="240"/> | <img src="./screenshot/line-reminder-vs-comparison.png" width="330" height="240"/>
 
 
 ## Contribution ##
