@@ -356,7 +356,7 @@ LENGTH : deletion length."
                     (setq current-linum (line-reminder-get-current-line-integer))))))
           ;; Just add the current line.
           (push begin-linum line-reminder-change-lines))
-        (delete-dups line-reminder-change-lines))))))
+        (delete-dups line-reminder-change-lines)))))
 
 
 (defun line-reminder-enable ()
