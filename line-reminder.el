@@ -78,7 +78,7 @@
 (defcustom line-reminder-ignore-buffer-names '("*Buffer List*"
                                                "*Checkdoc Status*"
                                                "*Echo Area 0*"
-                                               "*helm "
+                                               "*helm"
                                                "magit"
                                                "*run*"
                                                "*shell*"
