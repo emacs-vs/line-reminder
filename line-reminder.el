@@ -262,10 +262,9 @@ END : end of the changes."
     (save-excursion
       (let ((begin-linum -1)
             (end-linum -1))
-        (goto-char end)
-        (setq end-linum (line-reminder-get-current-line-integer))
+        (setq end-linum (line-number-at-pos end))
+        (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
-        (setq begin-linum (line-reminder-get-current-line-integer))
 
         (setq-local line-reminder-delta-line-count (- begin-linum end-linum))
 
@@ -312,10 +311,9 @@ LENGTH : deletion length."
         ;; Is deleting line can be depends on the length.
         (when (<= 1 length)
           (setq is-deleting-line t))
-        (goto-char end)
-        (setq end-linum (line-reminder-get-current-line-integer))
+        (setq end-linum (line-number-at-pos end))
+        (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
-        (setq begin-linum (line-reminder-get-current-line-integer))
 
         (if (or (not (= begin-linum end-linum))
                 (not (= line-reminder-delta-line-count 0)))
