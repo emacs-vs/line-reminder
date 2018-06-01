@@ -79,7 +79,9 @@
                                                "*Checkdoc Status*"
                                                "*Echo Area 0*"
                                                "*helm"
+                                               "*Help*"
                                                "magit"
+                                               "*Packages*"
                                                "*run*"
                                                "*shell*"
                                                "*undo-tree*")
