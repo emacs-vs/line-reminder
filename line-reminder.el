@@ -109,11 +109,13 @@ Set this limit so it will not crash.")
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
+(defun line-reminder-get-current-line-string ()
+  "Get the current line as string."
+  (format-mode-line "%l"))
+
 (defun line-reminder-total-line ()
   "Return current buffer's maxinum line."
-  (save-excursion
-    (goto-char (point-max))
-    (line-reminder-get-current-line-integer)))
+  (line-number-at-pos (point-max)))
 
 (defun line-reminder-is-contain-list-string (in-list in-str)
   "Check if a string contain in any string in the string list.
@@ -125,10 +127,6 @@ IN-STR : string using to check if is contain one of the IN-LIST."
 (defun line-reminder-get-current-line-integer ()
   "Get the current line as integer."
   (string-to-number (line-reminder-get-current-line-string)))
-
-(defun line-reminder-get-current-line-string ()
-  "Get the current line as string."
-  (format-mode-line "%l"))
 
 (defun line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
@@ -157,20 +155,13 @@ LINE-NUMBER : pass in by `linum-format' variable."
   "Return a propertized sign string by type.
 TYPE : type of the propertize sign you want.
 LINE-NUMBER : Pass is line number for normal sign."
-  (let ((face ""))
-    (cond ((string= type 'normal)
-           (progn
-             (if (not line-number)
+  (cl-case type
+    ('normal (if (not line-number)
                  (error "Normal line but with no line number pass in")
                ;; Just return normal linum format.
-               (setq face (line-reminder-get-propertized-normal-sign line-number)))))
-          ((string= type 'modified)
-           (progn
-             (setq face (line-reminder-get-propertized-modified-sign))))
-          ((string= type 'saved)
-           (progn
-             (setq face (line-reminder-get-propertized-saved-sign)))))
-    face))
+               (line-reminder-get-propertized-normal-sign line-number)))
+    ('modified (line-reminder-get-propertized-modified-sign))
+    ('saved (line-reminder-get-propertized-saved-sign))))
 
 
 (defun line-reminder-is-contain-list-integer (in-list in-int)
@@ -321,7 +312,6 @@ LENGTH : deletion length."
         ;; Is deleting line can be depends on the length.
         (when (<= 1 length)
           (setq is-deleting-line t))
-
         (goto-char end)
         (setq end-linum (line-reminder-get-current-line-integer))
         (goto-char begin)
