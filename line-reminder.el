@@ -122,10 +122,6 @@ the string.
 IN-STR : string using to check if is contain one of the IN-LIST."
   (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 
-(defun line-reminder-get-file-name ()
-  "Get current file name."
-  (file-name-nondirectory buffer-file-name))
-
 (defun line-reminder-get-current-line-integer ()
   "Get the current line as integer."
   (string-to-number (line-reminder-get-current-line-string)))
