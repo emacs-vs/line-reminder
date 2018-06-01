@@ -109,7 +109,7 @@ Set this limit so it will not crash.")
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
-(defun line-reminder-get-current-line-string ()
+(defsubst line-reminder-get-current-line-string ()
   "Get the current line as string."
   (format-mode-line "%l"))
 
@@ -128,12 +128,12 @@ IN-STR : string using to check if is contain one of the IN-LIST."
   "Get the current line as integer."
   (string-to-number (line-reminder-get-current-line-string)))
 
-(defun line-reminder-linum-format-string-align-right ()
+(defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
     (format "%%%dd" w)))
 
-(defun line-reminder-get-propertized-normal-sign (line-number)
+(defsubst line-reminder-get-propertized-normal-sign (line-number)
   "Return a default propertized normal sign.
 LINE-NUMBER : pass in by `linum-format' variable."
   (propertize (format (concat line-reminder-linum-left-string
@@ -142,11 +142,11 @@ LINE-NUMBER : pass in by `linum-format' variable."
                       line-number)
               'face 'linum))
 
-(defun line-reminder-get-propertized-modified-sign ()
+(defsubst line-reminder-get-propertized-modified-sign ()
   "Return a propertized modifoied sign."
   (propertize line-reminder-modified-sign 'face 'line-reminder-modified-sign-face))
 
-(defun line-reminder-get-propertized-saved-sign ()
+(defsubst line-reminder-get-propertized-saved-sign ()
   "Return a propertized saved sign."
   (propertize line-reminder-saved-sign 'face 'line-reminder-saved-sign-face))
 
