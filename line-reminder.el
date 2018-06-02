@@ -89,11 +89,6 @@
   :group 'line-reminder
   :type 'list)
 
-(defvar line-reminder-mouse-input-line-limit 10000
-  "When `after-change-functions''s BEGIN or END is higher than this limit \
-will crash.
-Set this limit so it will not crash.")
-
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
