@@ -232,8 +232,8 @@ DELTA : addition/subtraction value of the line count."
   in-list)
 
 (defun line-reminder-remove-lines-out-range (in-list)
-  "Remove all the line in the list that are above the last/maxinum or less \
-than zero line in current buffer.
+  "Remove all the line in the list that are above the last/maxinum line \
+or less than zero line in current buffer.
 IN-LIST : list to be remove or take effect with."
   ;; Remove line that are above last/max line in buffer.
   (let ((last-line-in-buffer (line-reminder-total-line)))
@@ -314,7 +314,8 @@ END : end of the changes."
               ;; line twice.
               (setq record-last-linum current-linum)))
 
-          ;; Remove line that are above last/max line in buffer.
+          ;; Remove line that are above last/max line or below than zero line
+          ;; in buffer.
           (setq-local line-reminder-change-lines
                       (line-reminder-remove-lines-out-range line-reminder-change-lines))
           (setq-local line-reminder-saved-lines
