@@ -101,6 +101,9 @@
 (defvar-local line-reminder-delta-line-count -1
   "Delta line count for `before-change-functions' and `after-change-functions'.")
 
+(defvar-local line-reminder-do-saving nil
+  "Is current buffer doing the saving hook/command?")
+
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
@@ -208,11 +211,20 @@ LINE-NUMBER : pass in by `linum-format' variable."
   (setq-local line-reminder-change-lines '())
   (setq-local line-reminder-saved-lines '()))
 
-(defun line-reminder-is-valid-line-reminder-situation ()
-  "Check if is valid to apply line reminder at the moment?"
-  (and (not buffer-read-only)
-       (not (line-reminder-is-contain-list-string line-reminder-ignore-buffer-names
-                                                  (buffer-name)))))
+(defun line-reminder-is-valid-line-reminder-situation (&optional begin end)
+  "Check if is valid to apply line reminder at the moment.
+BEGIN : start changing point.
+END : end changing point."
+  (if (and begin
+           end)
+      (and (not buffer-read-only)
+           (not (line-reminder-is-contain-list-string line-reminder-ignore-buffer-names
+                                                      (buffer-name)))
+           (<= begin (point-max))
+           (<= end (point-max)))
+    (and (not buffer-read-only)
+         (not (line-reminder-is-contain-list-string line-reminder-ignore-buffer-names
+                                                    (buffer-name))))))
 
 (defun line-reminder-delta-list-lines-by-bound (in-list bound delta)
   "Delta the count of line in the list by bound.
@@ -254,7 +266,10 @@ IN-LIST : list to be remove or take effect with."
       (setq-local line-reminder-saved-lines
                   (append line-reminder-saved-lines line-reminder-change-lines))
       ;; Clear the change lines.
-      (setq-local line-reminder-change-lines '()))))
+      (setq-local line-reminder-change-lines '())
+
+      ;; Removed save duplicates
+      (delete-dups line-reminder-saved-lines))))
 
 (defun line-reminder-after-save-hook ()
   "Do stuff after save hook."
@@ -262,14 +277,20 @@ IN-LIST : list to be remove or take effect with."
   (setq-local line-reminder-saved-lines
               (append line-reminder-saved-lines line-reminder-change-lines))
   ;; Clear the change lines.
-  (setq-local line-reminder-change-lines '()))
+  (setq-local line-reminder-change-lines '())
+
+  ;; Set saving trigger.
+  (setq-local line-reminder-do-saving t)
+
+  ;; Removed save duplicates
+  (delete-dups line-reminder-saved-lines))
 
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed.
 BEGIN : beginning of the changes.
 END : end of the changes."
 
-  (when (line-reminder-is-valid-line-reminder-situation)
+  (when (line-reminder-is-valid-line-reminder-situation begin end)
     (save-excursion
       (let ((begin-linum -1)
             (end-linum -1))
@@ -328,7 +349,7 @@ BEGIN : beginning of the changes.
 END : end of the changes.
 LENGTH : deletion length."
 
-  (when (line-reminder-is-valid-line-reminder-situation)
+  (when (line-reminder-is-valid-line-reminder-situation begin end)
     (save-excursion
       ;; When begin and end are not the same, meaning the there
       ;; is addition/deletion happening in the current buffer.
@@ -411,8 +432,10 @@ LENGTH : deletion length."
                     ;; Update the last linum, make sure it won't do the same
                     ;; line twice.
                     (setq record-last-linum current-linum)))))
-          ;; Just add the current line.
-          (push begin-linum line-reminder-change-lines))
+          (progn
+            (unless (= begin end)
+              ;; Just add the current line.
+              (push begin-linum line-reminder-change-lines))))
         (delete-dups line-reminder-change-lines)))))
 
 
