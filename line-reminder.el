@@ -311,8 +311,9 @@ END : end of the changes."
         ;; the changes happens.
         (setq-local line-reminder-max-last-linum (line-reminder-total-line))
 
-        ;; Update the record the fist time if it value is still -1.
-        (when (= line-reminder-record-max-last-linum -1)
+        ;; Update the record the fist time if it value is still default -1.
+        (when (and (= line-reminder-record-max-last-linum -1)
+                   (buffer-modified-p))
           (setq-local line-reminder-record-max-last-linum line-reminder-max-last-linum))
 
         ;; `begin-linum' and `end-linum' the same meaning there is no line
@@ -454,6 +455,7 @@ LENGTH : deletion length."
                       ;; Update the last linum, make sure it won't do the same
                       ;; line twice.
                       (setq record-last-linum current-linum)))))
+
               ;; Update the maxinum/last line number in current buffer
               ;; after changes.
               (setq-local line-reminder-record-max-last-linum line-reminder-max-last-linum))
