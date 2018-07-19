@@ -21,8 +21,8 @@ Customize string on the right/left side of the line number.
 ```
 
 List of face you can customize.
-* `line-reminder:modified-sign-face`
-* `line-reminder:saved-sign-face`
+* `line-reminder-modified-sign-face`
+* `line-reminder-saved-sign-face`
 
 Buffer Name List that you do not want this mode to take effect.
 ```
