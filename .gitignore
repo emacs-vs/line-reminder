@@ -10,3 +10,6 @@ line-reminder-pkg.el
 # ignore I use to not ignore.
 Update_Log.txt
 TODO(jenchieh).txt
+
+# ignore video
+/video
