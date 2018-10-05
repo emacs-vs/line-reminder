@@ -1,5 +1,7 @@
 # line-reminder #
 
+[![MELPA](https://melpa.org/packages/line-reminder-badge.svg)](https://melpa.org/#/line-reminder)
+
 Remind current line status by current buffer.<br/><br/>
 
 
