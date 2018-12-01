@@ -488,7 +488,7 @@ LENGTH : deletion length."
 
 
 (define-minor-mode line-reminder-mode
-  "Automatically capitalize booleans"
+  "Minor mode 'line-reminder-mode'."
   :lighter " LR"
   :group line-reminder
   (if line-reminder-mode
