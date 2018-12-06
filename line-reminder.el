@@ -40,7 +40,7 @@
   "Reminder what is the status of each line for current buffer/file."
   :prefix "line-reminder-"
   :group 'tool
-  :link '(url-link :tag "Repository" "https://github.com/jcs090218/line-reminder.git"))
+  :link '(url-link :tag "Repository" "https://github.com/jcs090218/line-reminder"))
 
 
 (defcustom line-reminder-linum-left-string ""
