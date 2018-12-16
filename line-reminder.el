@@ -487,7 +487,6 @@ LENGTH : deletion length."
   (line-reminder-clear-reminder-lines-sign))
 
 
-;;;###autoload
 (define-minor-mode line-reminder-mode
   "Minor mode 'line-reminder-mode'."
   :lighter " LR"
@@ -500,7 +499,6 @@ LENGTH : deletion length."
   "Turn on the 'line-reminder-mode'."
   (line-reminder-mode 1))
 
-;;;###autoload
 (define-globalized-minor-mode global-line-reminder-mode
   line-reminder-mode line-reminder-turn-on-line-reminder-mode
   :require 'line-reminder)
