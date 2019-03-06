@@ -1,4 +1,4 @@
-;;; line-reminder.el --- Remind current line status by current buffer.                     -*- lexical-binding: t; -*-
+;;; line-reminder.el --- Line annotation similar to Visual Studio.        -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Shen, Jen-Chieh
 ;; Created date 2018-05-25 15:10:29
@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Remind current line status by current buffer.
 ;; Keyword: annotation linum reminder
-;; Version: 0.0.4
+;; Version: 0.0.5
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 ;;
-;; Remind current line status by current buffer.
+;; Line annotation similar to Visual Studio.
 ;;
 
 ;;; Code:
@@ -37,7 +37,7 @@
 
 
 (defgroup line-reminder nil
-  "Reminder what is the status of each line for current buffer/file."
+  "Visual Studio like line annotation in Emacs."
   :prefix "line-reminder-"
   :group 'tool
   :link '(url-link :tag "Repository" "https://github.com/jcs090218/line-reminder"))
