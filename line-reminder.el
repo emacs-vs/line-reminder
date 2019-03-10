@@ -4,7 +4,7 @@
 ;; Created date 2018-05-25 15:10:29
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Remind current line status by current buffer.
+;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
 ;; Version: 0.0.5
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
