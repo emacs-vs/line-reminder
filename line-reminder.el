@@ -137,13 +137,13 @@ IN-STR : string using to check if is contain one of the IN-LIST."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
     (format "%%%dd" w)))
 
-(defsubst line-reminder-get-propertized-normal-sign (line-number)
+(defsubst line-reminder-get-propertized-normal-sign (ln)
   "Return a default propertized normal sign.
-LINE-NUMBER : pass in by `linum-format' variable."
+LN : pass in by `linum-format' variable."
   (propertize (format (concat line-reminder-linum-left-string
                               (line-reminder-linum-format-string-align-right)
                               line-reminder-linum-right-string)
-                      line-number)
+                      ln)
               'face 'linum))
 
 (defsubst line-reminder-get-propertized-modified-sign ()
@@ -155,15 +155,15 @@ LINE-NUMBER : pass in by `linum-format' variable."
   (propertize line-reminder-saved-sign 'face 'line-reminder-saved-sign-face))
 
 
-(defun line-reminder-propertized-sign-by-type (type &optional line-number)
+(defun line-reminder-propertized-sign-by-type (type &optional ln)
   "Return a propertized sign string by type.
 TYPE : type of the propertize sign you want.
-LINE-NUMBER : Pass is line number for normal sign."
+LN : Pass is line number for normal sign."
   (cl-case type
-    ('normal (if (not line-number)
+    ('normal (if (not ln)
                  (error "Normal line but with no line number pass in")
                ;; Just return normal linum format.
-               (line-reminder-get-propertized-normal-sign line-number)))
+               (line-reminder-get-propertized-normal-sign ln)))
     ('modified (line-reminder-get-propertized-modified-sign))
     ('saved (line-reminder-get-propertized-saved-sign))))
 
@@ -175,23 +175,23 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
   (cl-some #'(lambda (lb-sub-int) (= lb-sub-int in-int)) in-list))
 
 
-(defun line-reminder-linum-format (line-number)
+(defun line-reminder-linum-format (ln)
   "Core line reminder format string logic here.
-LINE-NUMBER : pass in by `linum-format' variable."
+LN : pass in by `linum-format' variable."
   (let ((reminder-sign "")
         (result-sign "")
-        (normal-sign (line-reminder-propertized-sign-by-type 'normal line-number))
+        (normal-sign (line-reminder-propertized-sign-by-type 'normal ln))
         (is-sign-exists nil))
 
     (cond (;; NOTE(jenchieh): Check if change lines list.
            (line-reminder-is-contain-list-integer line-reminder-change-lines
-                                                  line-number)
+                                                  ln)
            (progn
              (setq reminder-sign (line-reminder-propertized-sign-by-type 'modified))
              (setq is-sign-exists t)))
           (;; NOTE(jenchieh): Check if saved lines list.
            (line-reminder-is-contain-list-integer line-reminder-saved-lines
-                                                  line-number)
+                                                  ln)
            (progn
              (setq reminder-sign (line-reminder-propertized-sign-by-type 'saved))
              (setq is-sign-exists t))))
