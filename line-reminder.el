@@ -75,7 +75,8 @@
   "Modifed sign face."
   :group 'line-reminder)
 
-(defcustom line-reminder-ignore-buffer-names '("*Buffer List*"
+(defcustom line-reminder-ignore-buffer-names '("*Backtrace*"
+                                               "*Buffer List*"
                                                "*Checkdoc Status*"
                                                "*Echo Area 0*"
                                                "*helm"
