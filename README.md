@@ -3,12 +3,12 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 
-# line-reminder #
+# line-reminder
 
 Line annotation similar to Visual Studio.
 
 
-## Configuration ##
+## Configuration
 Customize the modified sign.
 ```el
 (setq line-reminder-modified-sign "▐")
@@ -31,7 +31,8 @@ List of face you can customize.
 
 Buffer Name List that you do not want this mode to take effect.
 ```el
-(setq line-reminder-ignore-buffer-names '("*Buffer List*"
+(setq line-reminder-ignore-buffer-names '("*Backtrace*"
+                                          "*Buffer List*"
                                           "*Checkdoc Status*"
                                           "*Echo Area 0*"
                                           "*helm "
@@ -42,7 +43,7 @@ Buffer Name List that you do not want this mode to take effect.
 ```
 
 
-## Usage ##
+## Usage
 Enable for all buffers.
 ```el
 (global-line-reminder-mode t)
@@ -52,13 +53,13 @@ Or you can just enable in specific buffer you want.
 (line-reminder-mode t)
 ```
 
-## Screenshot ##
+## Screenshot
 Line Reminder in Emacs Comparison                                                     | Visual Studio Comparison                                                          |
 :------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
 <img src="./screenshot/line-reminder-emacs-comparison.png" width="330" height="240"/> | <img src="./screenshot/line-reminder-vs-comparison.png" width="330" height="240"/>
 
 
-## Contribution ##
+## Contribution
 If you would like to contribute to this project, you may either 
 clone and make pull requests to this repository. Or you can 
 clone the project and establish your own branch of this tool. 
