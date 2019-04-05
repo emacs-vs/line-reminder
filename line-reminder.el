@@ -464,8 +464,8 @@ LENGTH : deletion length."
             ;; NOTE(jenchieh): For some reason, while saving this will be
             ;; trigger and add line that not suppose to be added. In order
             ;; to avoid this we add this `unless' statement.
-            (when (and (not (= begin end))
-                       (not is-deleting-line))
+            (when (or (= begin end)
+                      (not is-deleting-line))
               ;; Just add the current line.
               (push begin-linum line-reminder-change-lines))))
         (delete-dups line-reminder-change-lines)))))
