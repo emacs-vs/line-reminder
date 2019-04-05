@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
-;; Version: 0.0.8
+;; Version: 0.0.7
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
@@ -76,14 +76,13 @@
   :group 'line-reminder)
 
 (defcustom line-reminder-ignore-buffer-names '("*Backtrace*"
-                                               "*Minibuf-0*"
-                                               "*Minibuf-1*"
                                                "*Buffer List*"
                                                "*Checkdoc Status*"
-                                               "*Echo Area 0*"
+                                               "*Echo Area"
                                                "*helm"
                                                "*Help*"
                                                "magit"
+                                               "*Minibuf-"
                                                "*Packages*"
                                                "*run*"
                                                "*shell*"
@@ -378,12 +377,11 @@ LENGTH : deletion length."
             ;; either addition/subtraction.
             (bound-current-line -1)
             ;; Is deleting line or adding new line?
-            (is-deleting-line t))
+            (is-deleting-line nil))
 
         ;; Is deleting line can be depends on the length.
-        (when (and (= length 0)
-                   (not (= begin end)))
-          (setq is-deleting-line nil))
+        (when (<= 1 length)
+          (setq is-deleting-line t))
         (setq end-linum (line-number-at-pos end))
         (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
@@ -422,7 +420,7 @@ LENGTH : deletion length."
                     ;; NOTE(jenchieh): Preventing mouse clicking will trigger
                     ;; last or the second last linumber will be added to changes
                     ;; line. Is pretty weird though.
-                    (when (not (= line-reminder-max-last-linum line-reminder-record-max-last-linum))
+                    (unless (= line-reminder-max-last-linum line-reminder-record-max-last-linum)
                       ;; Deleting line. (After deleting line/lines, we just need
                       ;; to push the current line to `line-reminder-change-lines',
                       ;; which is also the beginning of line.)
@@ -440,7 +438,7 @@ LENGTH : deletion length."
                                 ;; Cannot be the same as last line in buffer.
                                 (not reach-last-line-in-buffer))
 
-                      (when (not (= line-reminder-max-last-linum line-reminder-record-max-last-linum))
+                      (unless (= line-reminder-max-last-linum line-reminder-record-max-last-linum)
                         ;; Push the current line to changes-line.
                         (push current-linum line-reminder-change-lines))
 
@@ -467,8 +465,8 @@ LENGTH : deletion length."
             ;; NOTE(jenchieh): For some reason, while saving this will be
             ;; trigger and add line that not suppose to be added. In order
             ;; to avoid this we add this `unless' statement.
-            (when (or (= begin end)
-                      (not is-deleting-line))
+            (when (and (not (= begin end))
+                       (not is-deleting-line))
               ;; Just add the current line.
               (push begin-linum line-reminder-change-lines))))
         (delete-dups line-reminder-change-lines)))))
