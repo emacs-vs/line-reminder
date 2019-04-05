@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
-;; Version: 0.0.7
+;; Version: 0.0.8
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
@@ -376,11 +376,12 @@ LENGTH : deletion length."
             ;; either addition/subtraction.
             (bound-current-line -1)
             ;; Is deleting line or adding new line?
-            (is-deleting-line nil))
+            (is-deleting-line t))
 
         ;; Is deleting line can be depends on the length.
-        (when (<= 1 length)
-          (setq is-deleting-line t))
+        (when (and (= length 0)
+                   (not (= begin end)))
+          (setq is-deleting-line nil))
         (setq end-linum (line-number-at-pos end))
         (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
