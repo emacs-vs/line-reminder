@@ -100,6 +100,18 @@
 (defvar-local line-reminder-saved-lines '()
   "List of line that saved in current temp buffer.")
 
+(defvar-local line-reminder-before-begin-pt -1
+  "Record down the before begin point.")
+
+(defvar-local line-reminder-before-end-pt -1
+  "Record down the before end point.")
+
+(defvar-local line-reminder-before-begin-linum -1
+  "Record down the before begin line number.")
+
+(defvar-local line-reminder-before-end-linum -1
+  "Record down the before end line number.")
+
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
@@ -227,14 +239,9 @@ END : end changing point."
 IN-LIST : input line list.
 BOUND : everything above is affective by delta.
 DELTA : addition/subtraction value of the line count."
-  ;; (message "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
-  ;; (message "bound : %s" bound)
   (let ((index 0))
     (dolist (tmp-linum in-list)
       (when (< bound tmp-linum)
-        ;; (message "---")
-        ;; (message "tmp-linum : %s" tmp-linum)
-        ;; (message "changed : %s" (+ tmp-linum delta))
         (setf (nth index in-list) (+ tmp-linum delta)))
       (setq index (1+ index))))
   in-list)
@@ -270,22 +277,6 @@ IN-LIST : list to be remove or take effect with."
     tmp-lst))
 
 
-(defun line-reminder-post-command-hook ()
-  "Do stuff when post command."
-  ;; (when (line-reminder-is-valid-line-reminder-situation)
-  ;;   (unless (buffer-modified-p)
-  ;;     ;; Transfer the `change-lines' to `saved-lines'.
-  ;;     (setq-local line-reminder-saved-lines
-  ;;                 (append line-reminder-saved-lines line-reminder-change-lines))
-  ;;     ;; Clear the change lines.
-  ;;     (setq-local line-reminder-change-lines '())
-
-  ;;     ;; Removed save duplicates
-  ;;     (delete-dups line-reminder-saved-lines)
-  ;;     ;; Remove out range.
-  ;;     (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))))
-  )
-
 (defun line-reminder-after-save-hook ()
   "Do stuff after save hook."
   ;; Transfer the `change-lines' to `saved-lines'.
@@ -295,13 +286,18 @@ IN-LIST : list to be remove or take effect with."
   (setq-local line-reminder-change-lines '())
 
   ;; Removed save duplicates
-  (delete-dups line-reminder-saved-lines))
+  (delete-dups line-reminder-saved-lines)
+  ;; Remove out range.
+  (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines)))
 
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed.
 BEGIN : beginning of the changes.
 END : end of the changes."
-  )
+  (setq-local line-reminder-before-begin-pt begin)
+  (setq-local line-reminder-before-end-pt end)
+  (setq-local line-reminder-before-begin-linum (line-number-at-pos begin))
+  (setq-local line-reminder-before-end-linum (line-number-at-pos end)))
 
 (defun line-reminder-after-change-functions (begin end length)
   "Do stuff after buffer is changed.
@@ -322,19 +318,23 @@ LENGTH : deletion length."
             ;; Is deleting line or adding new line?
             (is-deleting-line nil))
 
-        (message "----------------------------------------------------------------------------")
-        (jcs-print-current-buffer-name)
-        (message "before begin : %s" begin)
-        (message "before end : %s" end)
+        ;; (message "----------------------------------------------------------------------------")
+        ;; (message "before begin : %s" begin)
+        ;; (message "before end : %s" end)
 
         ;; Is deleting line can be depends on the length.
         (when  (= begin end)
           (setq is-deleting-line t))
-        (when is-deleting-line
-          (setq end (+ begin length)))
+        (if is-deleting-line
+            (progn
+              (setq begin line-reminder-before-begin-pt)
+              (setq end line-reminder-before-end-pt)
+              (setq begin-linum line-reminder-before-begin-linum)
+              (setq end-linum line-reminder-before-end-linum))
+          (progn
+            (setq end-linum (line-number-at-pos end))
+            (setq begin-linum (line-number-at-pos begin))))
 
-        (setq end-linum (line-number-at-pos end))
-        (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
 
         (setq delta-line-count (- end-linum begin-linum))
@@ -355,93 +355,94 @@ LENGTH : deletion length."
         ;; (message "length : %s" length)
         ;; (message "before clc: %s" line-reminder-change-lines)
 
-
         (when (or (not (= begin-linum end-linum))
                   (not (= delta-line-count 0)))
           ;; NOTE(jenchieh): Deletion..
-          (if is-deleting-line
-              (progn
-                (let ((current-linum begin-linum)
-                      (record-last-linum begin-linum)
-                      (reach-last-line-in-buffer nil))
-                  (while (and (< current-linum end-linum)
-                              ;; Cannot be the same as last line in buffer.
-                              (not reach-last-line-in-buffer))
-                    ;; To do the next line.
-                    (forward-line 1)
-                    (setq current-linum (line-reminder-get-current-line-integer))
+          (when is-deleting-line
+            (let ((current-linum begin-linum)
+                  (record-last-linum begin-linum)
+                  (reach-last-line-in-buffer nil))
+              (while (and (< current-linum end-linum)
+                          ;; Cannot be the same as last line in buffer.
+                          (not reach-last-line-in-buffer))
+                ;; To do the next line.
+                (forward-line 1)
+                (setq current-linum (line-reminder-get-current-line-integer))
 
-                    ;; Remove line because we are deleting.
-                    (setq-local line-reminder-change-lines
-                                (remove current-linum line-reminder-change-lines))
-                    (setq-local line-reminder-saved-lines
-                                (remove current-linum line-reminder-saved-lines))
+                ;; Remove line because we are deleting.
+                (setq-local line-reminder-change-lines
+                            (remove current-linum line-reminder-change-lines))
+                (setq-local line-reminder-saved-lines
+                            (remove current-linum line-reminder-saved-lines))
 
-                    ;; NOTE(jenchieh): Check if we need to terminate this loop?
-                    (when (or
-                           ;; Check if still the same as last line.
-                           (= current-linum record-last-linum)
-                           ;; Check if current linum last line in buffer
-                           (= current-linum (line-reminder-total-line)))
-                      (setq reach-last-line-in-buffer t))
+                ;; NOTE(jenchieh): Check if we need to terminate this loop?
+                (when (or
+                       ;; Check if still the same as last line.
+                       (= current-linum record-last-linum)
+                       ;; Check if current linum last line in buffer
+                       (= current-linum (line-reminder-total-line)))
+                  (setq reach-last-line-in-buffer t))
 
-                    ;; Update the last linum, make sure it won't do the same
-                    ;; line twice.
-                    (setq record-last-linum current-linum)))
+                ;; Update the last linum, make sure it won't do the same
+                ;; line twice.
+                (setq record-last-linum current-linum)))
 
+            ;; If adding line, bound is the end line number.
+            ;;(setq bound-current-line begin-linum)
+
+            (if (= delta-line-count -1)
                 ;; If adding line, bound is the end line number.
-                ;;(setq bound-current-line begin-linum)
+                (setq bound-current-line begin-linum)
+              ;; If adding line, bound is the end line number.
+              (setq bound-current-line end-linum))
 
-                (if (= delta-line-count -1)
-                    ;; If adding line, bound is the end line number.
-                    (setq bound-current-line begin-linum)
-                  ;; If adding line, bound is the end line number.
-                  (setq bound-current-line end-linum))
+            (line-reminder-delta-list-lines-by-bound-once bound-current-line
+                                                          delta-line-count))
 
-                (line-reminder-delta-list-lines-by-bound-once bound-current-line
-                                                              delta-line-count))
-            ;; NOTE(jenchieh): Addition..
-            (progn
-              (if (and (= delta-line-count 1)
-                       (not (= length 1)))
-                  ;; If adding line, bound is the end line number.
-                  (setq bound-current-line begin-linum)
+          ;; NOTE(jenchieh): Addition..
+          (when (and (not is-deleting-line)
+                     (not (= begin end))
+                     (= length 0))
+            (if (and (= delta-line-count 1)
+                     (not (= length 1)))
                 ;; If adding line, bound is the end line number.
-                (setq bound-current-line end-linum))
+                (setq bound-current-line begin-linum)
+              ;; If adding line, bound is the end line number.
+              (setq bound-current-line end-linum))
 
-              (line-reminder-delta-list-lines-by-bound-once bound-current-line
-                                                            delta-line-count)
+            (line-reminder-delta-list-lines-by-bound-once bound-current-line
+                                                          delta-line-count)
 
-              ;; Adding line. (After adding line/lines, we just need to loop
-              ;; throught those lines and add it to `line-reminder-change-lines'
-              ;; list.)
-              (let ((current-linum begin-linum)
-                    ;; Record down the last current line number, to make
-                    ;; sure that we don't fall into infinite loop.
-                    (record-last-linum begin-linum)
-                    (reach-last-line-in-buffer nil))
-                (while (and (<= current-linum end-linum)
-                            ;; Cannot be the same as last line in buffer.
-                            (not reach-last-line-in-buffer))
+            ;; Adding line. (After adding line/lines, we just need to loop
+            ;; throught those lines and add it to `line-reminder-change-lines'
+            ;; list.)
+            (let ((current-linum begin-linum)
+                  ;; Record down the last current line number, to make
+                  ;; sure that we don't fall into infinite loop.
+                  (record-last-linum begin-linum)
+                  (reach-last-line-in-buffer nil))
+              (while (and (<= current-linum end-linum)
+                          ;; Cannot be the same as last line in buffer.
+                          (not reach-last-line-in-buffer))
 
-                  ;; Push the current line to changes-line.
-                  (push current-linum line-reminder-change-lines)
+                ;; Push the current line to changes-line.
+                (push current-linum line-reminder-change-lines)
 
-                  ;; To do the next line.
-                  (forward-line 1)
-                  (setq current-linum (line-reminder-get-current-line-integer))
+                ;; To do the next line.
+                (forward-line 1)
+                (setq current-linum (line-reminder-get-current-line-integer))
 
-                  ;; NOTE(jenchieh): Check if we need to terminate this loop?
-                  (when (or
-                         ;; Check if still the same as last line.
-                         (= current-linum record-last-linum)
-                         ;; Check if current linum last line in buffer
-                         (= current-linum (line-reminder-total-line)))
-                    (setq reach-last-line-in-buffer t))
+                ;; NOTE(jenchieh): Check if we need to terminate this loop?
+                (when (or
+                       ;; Check if still the same as last line.
+                       (= current-linum record-last-linum)
+                       ;; Check if current linum last line in buffer
+                       (= current-linum (line-reminder-total-line)))
+                  (setq reach-last-line-in-buffer t))
 
-                  ;; Update the last linum, make sure it won't do the same
-                  ;; line twice.
-                  (setq record-last-linum current-linum))))))
+                ;; Update the last linum, make sure it won't do the same
+                ;; line twice.
+                (setq record-last-linum current-linum)))))
 
         (delete-dups line-reminder-change-lines)
         (delete-dups line-reminder-saved-lines)
@@ -450,7 +451,7 @@ LENGTH : deletion length."
         (setq line-reminder-change-lines (line-reminder-remove-lines-out-range line-reminder-change-lines))
         (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))
 
-        (message "clc: %s" line-reminder-change-lines)
+        ;;(message "clc: %s" line-reminder-change-lines)
         ))))
 
 
@@ -459,15 +460,13 @@ LENGTH : deletion length."
   (setq-local linum-format 'line-reminder-linum-format)
   (add-hook 'before-change-functions #'line-reminder-before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
-  (add-hook 'after-save-hook #'line-reminder-after-save-hook nil t)
-  (add-hook 'post-command-hook #'line-reminder-post-command-hook nil t))
+  (add-hook 'after-save-hook #'line-reminder-after-save-hook nil t))
 
 (defun line-reminder-disable ()
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder-before-change-functions t)
   (remove-hook 'after-change-functions #'line-reminder-after-change-functions t)
   (remove-hook 'after-save-hook #'line-reminder-after-save-hook t)
-  (remove-hook 'post-command-hook #'line-reminder-post-command-hook t)
   (line-reminder-clear-reminder-lines-sign))
 
 
