@@ -318,10 +318,6 @@ LENGTH : deletion length."
             ;; Is deleting line or adding new line?
             (is-deleting-line nil))
 
-        ;; (message "----------------------------------------------------------------------------")
-        ;; (message "before begin : %s" begin)
-        ;; (message "before end : %s" end)
-
         ;; Is deleting line can be depends on the length.
         (when  (= begin end)
           (setq is-deleting-line t))
@@ -344,16 +340,6 @@ LENGTH : deletion length."
         ;; Just add the current line.
         (push begin-linum line-reminder-change-lines)
 
-        ;; (if is-deleting-line (message "*Del*") (message "*Add*"))
-        ;; (message "begin-linum: %s" begin-linum)
-        ;; (message "end-linum: %s" end-linum)
-        ;; (message "delta-line-count: %s" delta-line-count)
-        ;; (message "total line: %s" (line-reminder-total-line))
-        ;; ;;(message "Content: %s" (jcs-get-string-from-file (buffer-file-name)))
-        ;; (message "begin : %s" begin)
-        ;; (message "end : %s" end)
-        ;; (message "length : %s" length)
-        ;; (message "before clc: %s" line-reminder-change-lines)
 
         (when (or (not (= begin-linum end-linum))
                   (not (= delta-line-count 0)))
@@ -386,9 +372,6 @@ LENGTH : deletion length."
                 ;; Update the last linum, make sure it won't do the same
                 ;; line twice.
                 (setq record-last-linum current-linum)))
-
-            ;; If adding line, bound is the end line number.
-            ;;(setq bound-current-line begin-linum)
 
             (if (= delta-line-count -1)
                 ;; If adding line, bound is the end line number.
@@ -449,10 +432,7 @@ LENGTH : deletion length."
 
         ;; Remove out range.
         (setq line-reminder-change-lines (line-reminder-remove-lines-out-range line-reminder-change-lines))
-        (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))
-
-        ;;(message "clc: %s" line-reminder-change-lines)
-        ))))
+        (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))))))
 
 
 (defun line-reminder-enable ()
