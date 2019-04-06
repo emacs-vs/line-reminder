@@ -100,12 +100,6 @@
 (defvar-local line-reminder-saved-lines '()
   "List of line that saved in current temp buffer.")
 
-(defvar-local line-reminder-delta-line-count -1
-  "Delta line count for `before-change-functions' and `after-change-functions'.")
-
-(defvar-local line-reminder-do-saving nil
-  "Is current buffer doing the saving hook/command?")
-
 ;; ----------------------------------------------------------------------------
 ;; ----------------------------------------------------------------------------
 
@@ -233,45 +227,64 @@ END : end changing point."
 IN-LIST : input line list.
 BOUND : everything above is affective by delta.
 DELTA : addition/subtraction value of the line count."
+  ;; (message "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
+  ;; (message "bound : %s" bound)
   (let ((index 0))
     (dolist (tmp-linum in-list)
-      (if (< delta 0)
-          ;; Is negative. (Deleting delta of lines)
-          (when (< bound tmp-linum)
-            (setf (nth index in-list) (+ tmp-linum delta)))
-        ;; Is positive. (Adding delta of lines)
-        (when (<= bound tmp-linum)
-          (setf (nth index in-list) (+ tmp-linum delta))))
+      (when (< bound tmp-linum)
+        ;; (message "---")
+        ;; (message "tmp-linum : %s" tmp-linum)
+        ;; (message "changed : %s" (+ tmp-linum delta))
+        (setf (nth index in-list) (+ tmp-linum delta)))
       (setq index (1+ index))))
   in-list)
+
+(defun line-reminder-delta-list-lines-by-bound-once (bound-current-line delta-line-count)
+  "Delta list line by bound once to all type of lines using by this package.
+BOUND-CURRENT-LINE  : Center line number.
+DELTA-LINE-COUNT : Delta line count."
+  ;; Add up delta line count to `change-lines' list.
+  (setq line-reminder-change-lines
+        (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
+                                                 bound-current-line
+                                                 delta-line-count))
+  ;; Add up delta line count to `saved-lines' list.
+  (setq line-reminder-saved-lines
+        (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
+                                                 bound-current-line
+                                                 delta-line-count)))
 
 (defun line-reminder-remove-lines-out-range (in-list)
   "Remove all the line in the list that are above the last/maxinum line \
 or less than zero line in current buffer.
 IN-LIST : list to be remove or take effect with."
   ;; Remove line that are above last/max line in buffer.
-  (let ((last-line-in-buffer (line-reminder-total-line)))
+  (let ((last-line-in-buffer (line-reminder-total-line))
+        (tmp-lst in-list))
     (dolist (line in-list)
       ;; If is larger than last/max line in buffer.
       (when (or (< last-line-in-buffer line)
                 (<= line 0))
         ;; Remove line because we are deleting.
-        (setq in-list (remove line in-list)))))
-  in-list)
+        (setq tmp-lst (remove line tmp-lst))))
+    tmp-lst))
 
 
 (defun line-reminder-post-command-hook ()
   "Do stuff when post command."
-  (when (line-reminder-is-valid-line-reminder-situation)
-    (unless (buffer-modified-p)
-      ;; Transfer the `change-lines' to `saved-lines'.
-      (setq-local line-reminder-saved-lines
-                  (append line-reminder-saved-lines line-reminder-change-lines))
-      ;; Clear the change lines.
-      (setq-local line-reminder-change-lines '())
+  ;; (when (line-reminder-is-valid-line-reminder-situation)
+  ;;   (unless (buffer-modified-p)
+  ;;     ;; Transfer the `change-lines' to `saved-lines'.
+  ;;     (setq-local line-reminder-saved-lines
+  ;;                 (append line-reminder-saved-lines line-reminder-change-lines))
+  ;;     ;; Clear the change lines.
+  ;;     (setq-local line-reminder-change-lines '())
 
-      ;; Removed save duplicates
-      (delete-dups line-reminder-saved-lines))))
+  ;;     ;; Removed save duplicates
+  ;;     (delete-dups line-reminder-saved-lines)
+  ;;     ;; Remove out range.
+  ;;     (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))))
+  )
 
 (defun line-reminder-after-save-hook ()
   "Do stuff after save hook."
@@ -280,9 +293,6 @@ IN-LIST : list to be remove or take effect with."
               (append line-reminder-saved-lines line-reminder-change-lines))
   ;; Clear the change lines.
   (setq-local line-reminder-change-lines '())
-
-  ;; Set saving trigger.
-  (setq-local line-reminder-do-saving t)
 
   ;; Removed save duplicates
   (delete-dups line-reminder-saved-lines))
@@ -312,55 +322,49 @@ LENGTH : deletion length."
             ;; Is deleting line or adding new line?
             (is-deleting-line nil))
 
+        (message "----------------------------------------------------------------------------")
+        (jcs-print-current-buffer-name)
+        (message "before begin : %s" begin)
+        (message "before end : %s" end)
+
         ;; Is deleting line can be depends on the length.
         (when  (= begin end)
           (setq is-deleting-line t))
         (when is-deleting-line
           (setq end (+ begin length)))
+
         (setq end-linum (line-number-at-pos end))
         (setq begin-linum (line-number-at-pos begin))
         (goto-char begin)
 
+        (setq delta-line-count (- end-linum begin-linum))
+        (when is-deleting-line
+          (setq delta-line-count (- 0 delta-line-count)))
+
         ;; Just add the current line.
         (push begin-linum line-reminder-change-lines)
 
+        ;; (if is-deleting-line (message "*Del*") (message "*Add*"))
+        ;; (message "begin-linum: %s" begin-linum)
+        ;; (message "end-linum: %s" end-linum)
+        ;; (message "delta-line-count: %s" delta-line-count)
+        ;; (message "total line: %s" (line-reminder-total-line))
+        ;; ;;(message "Content: %s" (jcs-get-string-from-file (buffer-file-name)))
+        ;; (message "begin : %s" begin)
+        ;; (message "end : %s" end)
+        ;; (message "length : %s" length)
+        ;; (message "before clc: %s" line-reminder-change-lines)
+
+
         (when (or (not (= begin-linum end-linum))
-                  (not (= line-reminder-delta-line-count 0)))
-          ;; Get delta line count. (Either adding/deleting lines)
-          (if is-deleting-line
-              ;; We use local variable `line-reminder-delta-line-count' here,
-              ;; because after deleting we do not know how many lines are
-              ;; deleted. Only way to find out is to get the information from
-              ;; `before-change-functions' hook and use it here.
-              (setq delta-line-count line-reminder-delta-line-count)
-            ;; Notice, we cannot get the deletion lines infromation from here.
-            ;; Fortunately, adding lines/newline can be calculated here by just
-            ;; Minusing `end-linum' and `begin-linum'.
-            (setq delta-line-count (- end-linum begin-linum)))
-
-          ;; Bound is also the beginning of the line number.
-          (setq bound-current-line begin-linum)
-
-          (message "-----------------------------------------")
-          (if is-deleting-line (message "*Del*") (message "*Add*"))
-          (message "begin-linum: %s" begin-linum)
-          (message "end-linum: %s" end-linum)
-          (message "begin : %s" begin)
-          (message "end : %s" end)
-          (message "length : %s" length)
-
-
+                  (not (= delta-line-count 0)))
+          ;; NOTE(jenchieh): Deletion..
           (if is-deleting-line
               (progn
-                ;; Deleting line. (After deleting line/lines, we just need
-                ;; to push the current line to `line-reminder-change-lines',
-                ;; which is also the beginning of line.)
-                (push begin-linum line-reminder-change-lines)
-
                 (let ((current-linum begin-linum)
                       (record-last-linum begin-linum)
                       (reach-last-line-in-buffer nil))
-                  (while (and (<= current-linum end-linum)
+                  (while (and (< current-linum end-linum)
                               ;; Cannot be the same as last line in buffer.
                               (not reach-last-line-in-buffer))
                     ;; To do the next line.
@@ -384,19 +388,29 @@ LENGTH : deletion length."
                     ;; Update the last linum, make sure it won't do the same
                     ;; line twice.
                     (setq record-last-linum current-linum)))
-                )
-            (progn
-              ;; Add up delta line count to `change-lines' list.
-              (setq line-reminder-change-lines
-                    (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
-                                                             bound-current-line
-                                                             delta-line-count))
-              ;; Add up delta line count to `saved-lines' list.
-              (setq line-reminder-saved-lines
-                    (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
-                                                             bound-current-line
-                                                             delta-line-count))
 
+                ;; If adding line, bound is the end line number.
+                ;;(setq bound-current-line begin-linum)
+
+                (if (= delta-line-count -1)
+                    ;; If adding line, bound is the end line number.
+                    (setq bound-current-line begin-linum)
+                  ;; If adding line, bound is the end line number.
+                  (setq bound-current-line end-linum))
+
+                (line-reminder-delta-list-lines-by-bound-once bound-current-line
+                                                              delta-line-count))
+            ;; NOTE(jenchieh): Addition..
+            (progn
+              (if (and (= delta-line-count 1)
+                       (not (= length 1)))
+                  ;; If adding line, bound is the end line number.
+                  (setq bound-current-line begin-linum)
+                ;; If adding line, bound is the end line number.
+                (setq bound-current-line end-linum))
+
+              (line-reminder-delta-list-lines-by-bound-once bound-current-line
+                                                            delta-line-count)
 
               ;; Adding line. (After adding line/lines, we just need to loop
               ;; throught those lines and add it to `line-reminder-change-lines'
@@ -428,7 +442,13 @@ LENGTH : deletion length."
                   ;; Update the last linum, make sure it won't do the same
                   ;; line twice.
                   (setq record-last-linum current-linum))))))
+
         (delete-dups line-reminder-change-lines)
+        (delete-dups line-reminder-saved-lines)
+
+        ;; Remove out range.
+        (setq line-reminder-change-lines (line-reminder-remove-lines-out-range line-reminder-change-lines))
+        (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))
 
         (message "clc: %s" line-reminder-change-lines)
         ))))
