@@ -294,10 +294,11 @@ IN-LIST : list to be remove or take effect with."
   "Do stuff before buffer is changed.
 BEGIN : beginning of the changes.
 END : end of the changes."
-  (setq-local line-reminder-before-begin-pt begin)
-  (setq-local line-reminder-before-end-pt end)
-  (setq-local line-reminder-before-begin-linum (line-number-at-pos begin))
-  (setq-local line-reminder-before-end-linum (line-number-at-pos end)))
+  (when (line-reminder-is-valid-line-reminder-situation begin end)
+    (setq-local line-reminder-before-begin-pt begin)
+    (setq-local line-reminder-before-end-pt end)
+    (setq-local line-reminder-before-begin-linum (line-number-at-pos begin))
+    (setq-local line-reminder-before-end-linum (line-number-at-pos end))))
 
 (defun line-reminder-after-change-functions (begin end length)
   "Do stuff after buffer is changed.
