@@ -276,10 +276,10 @@ IN-LIST : list to be remove or take effect with."
         (setq tmp-lst (remove line tmp-lst))))
     tmp-lst))
 
-
-(defun line-reminder-after-save-hook ()
-  "Do stuff after save hook."
-  ;; Transfer the `change-lines' to `saved-lines'.
+;;;###autoload
+(defun line-reminder-transfer-to-saved-lines ()
+  "Transfer the `change-lines' to `saved-lines'."
+  (interactive)
   (setq-local line-reminder-saved-lines
               (append line-reminder-saved-lines line-reminder-change-lines))
   ;; Clear the change lines.
@@ -289,6 +289,7 @@ IN-LIST : list to be remove or take effect with."
   (delete-dups line-reminder-saved-lines)
   ;; Remove out range.
   (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines)))
+
 
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed.
@@ -431,13 +432,13 @@ LENGTH : deletion length."
   (setq-local linum-format 'line-reminder-linum-format)
   (add-hook 'before-change-functions #'line-reminder-before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
-  (add-hook 'after-save-hook #'line-reminder-after-save-hook nil t))
+  (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
 
 (defun line-reminder-disable ()
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder-before-change-functions t)
   (remove-hook 'after-change-functions #'line-reminder-after-change-functions t)
-  (remove-hook 'after-save-hook #'line-reminder-after-save-hook t)
+  (advice-remove 'save-buffer #'line-reminder-transfer-to-saved-lines)
   (line-reminder-clear-reminder-lines-sign))
 
 
