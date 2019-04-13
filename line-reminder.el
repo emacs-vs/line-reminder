@@ -251,15 +251,15 @@ DELTA : addition/subtraction value of the line count."
 BOUND-CURRENT-LINE  : Center line number.
 DELTA-LINE-COUNT : Delta line count."
   ;; Add up delta line count to `change-lines' list.
-  (setq line-reminder-change-lines
-        (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
-                                                 bound-current-line
-                                                 delta-line-count))
+  (setq-local line-reminder-change-lines
+              (line-reminder-delta-list-lines-by-bound line-reminder-change-lines
+                                                       bound-current-line
+                                                       delta-line-count))
   ;; Add up delta line count to `saved-lines' list.
-  (setq line-reminder-saved-lines
-        (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
-                                                 bound-current-line
-                                                 delta-line-count)))
+  (setq-local line-reminder-saved-lines
+              (line-reminder-delta-list-lines-by-bound line-reminder-saved-lines
+                                                       bound-current-line
+                                                       delta-line-count)))
 
 (defun line-reminder-remove-lines-out-range (in-list)
   "Remove all the line in the list that are above the last/maxinum line \
@@ -276,6 +276,11 @@ IN-LIST : list to be remove or take effect with."
         (setq tmp-lst (remove line tmp-lst))))
     tmp-lst))
 
+(defun line-reminder-remove-lines-out-range-once ()
+  "Do `line-reminder-remove-lines-out-range' to all line list apply to this mode."
+  (setq-local line-reminder-change-lines (line-reminder-remove-lines-out-range line-reminder-change-lines))
+  (setq-local line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines)))
+
 ;;;###autoload
 (defun line-reminder-transfer-to-saved-lines ()
   "Transfer the `change-lines' to `saved-lines'."
@@ -288,7 +293,7 @@ IN-LIST : list to be remove or take effect with."
   ;; Removed save duplicates
   (delete-dups line-reminder-saved-lines)
   ;; Remove out range.
-  (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines)))
+  (line-reminder-remove-lines-out-range-once))
 
 
 (defun line-reminder-before-change-functions (begin end)
@@ -348,6 +353,8 @@ LENGTH : deletion length."
 
         (when (or (not (= begin-linum end-linum))
                   (not (= delta-line-count 0)))
+          (line-reminder-remove-lines-out-range-once)
+
           ;; NOTE(jenchieh): Deletion..
           (when is-deleting-line
             (let ((current-linum begin-linum)
@@ -423,8 +430,7 @@ LENGTH : deletion length."
         (delete-dups line-reminder-saved-lines)
 
         ;; Remove out range.
-        (setq line-reminder-change-lines (line-reminder-remove-lines-out-range line-reminder-change-lines))
-        (setq line-reminder-saved-lines (line-reminder-remove-lines-out-range line-reminder-saved-lines))))))
+        (line-reminder-remove-lines-out-range-once)))))
 
 
 (defun line-reminder-enable ()
