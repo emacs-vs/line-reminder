@@ -6,7 +6,6 @@
 # line-reminder
 > Line annotation similar to Visual Studio.
 
-## Screenshot
 | Line Reminder in Emacs Comparison                           | Visual Studio Comparison                                 |
 |:-----------------------------------------------------------:|:--------------------------------------------------------:|
 |<img src="./screenshot/line-reminder-emacs-comparison.png"/> | <img src="./screenshot/line-reminder-vs-comparison.png"/>|
