@@ -1,4 +1,4 @@
-;;; line-reminder.el --- Line annotation similar to Visual Studio.        -*- lexical-binding: t; -*-
+;;; line-reminder.el --- Line annotation similar to Visual Studio.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Shen, Jen-Chieh
 ;; Created date 2018-05-25 15:10:29
