@@ -4,8 +4,12 @@
 
 
 # line-reminder
+> Line annotation similar to Visual Studio.
 
-Line annotation similar to Visual Studio.
+## Screenshot
+| Line Reminder in Emacs Comparison                           | Visual Studio Comparison                                 |
+|:-----------------------------------------------------------:|:--------------------------------------------------------:|
+|<img src="./screenshot/line-reminder-emacs-comparison.png"/> | <img src="./screenshot/line-reminder-vs-comparison.png"/>|
 
 
 ## Configuration
@@ -55,11 +59,6 @@ Or you can just enable in specific buffer you want.
 ```el
 (line-reminder-mode t)
 ```
-
-## Screenshot
-Line Reminder in Emacs Comparison                                                     | Visual Studio Comparison                                                          |
-:------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
-<img src="./screenshot/line-reminder-emacs-comparison.png" width="330" height="240"/> | <img src="./screenshot/line-reminder-vs-comparison.png" width="330" height="240"/>
 
 
 ## Contribution
