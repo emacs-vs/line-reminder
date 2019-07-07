@@ -12,6 +12,7 @@
 
 
 ## Configuration
+
 Customize the modified sign.
 ```el
 (setq line-reminder-modified-sign "▐")
@@ -50,6 +51,7 @@ Buffer Name List that you do not want this mode to take effect.
 
 
 ## Usage
+
 Enable for all buffers.
 ```el
 (global-line-reminder-mode t)
@@ -60,7 +62,13 @@ Or you can just enable in specific buffer you want.
 ```
 
 
+## Dependencies
+
+* [linum](https://www.emacswiki.org/emacs/LineNumbers)
+
+
 ## Contribution
+
 If you would like to contribute to this project, you may either 
 clone and make pull requests to this repository. Or you can 
 clone the project and establish your own branch of this tool. 
