@@ -185,13 +185,13 @@ LN : pass in by `linum-format' variable."
         (normal-sign (line-reminder-propertized-sign-by-type 'normal ln))
         (is-sign-exists nil))
 
-    (cond (;; NOTE(jenchieh): Check if change lines list.
+    (cond (;; NOTE: Check if change lines list.
            (line-reminder-is-contain-list-integer line-reminder-change-lines
                                                   ln)
            (progn
              (setq reminder-sign (line-reminder-propertized-sign-by-type 'modified))
              (setq is-sign-exists t)))
-          (;; NOTE(jenchieh): Check if saved lines list.
+          (;; NOTE: Check if saved lines list.
            (line-reminder-is-contain-list-integer line-reminder-saved-lines
                                                   ln)
            (progn
@@ -334,9 +334,8 @@ LENGTH : deletion length."
               (setq end line-reminder-before-end-pt)
               (setq begin-linum line-reminder-before-begin-linum)
               (setq end-linum line-reminder-before-end-linum))
-          (progn
-            (setq end-linum (line-number-at-pos end))
-            (setq begin-linum (line-number-at-pos begin))))
+          (setq end-linum (line-number-at-pos end))
+          (setq begin-linum (line-number-at-pos begin)))
 
         (goto-char begin)
 
@@ -355,7 +354,7 @@ LENGTH : deletion length."
                   (not (= delta-line-count 0)))
           (line-reminder-remove-lines-out-range-once)
 
-          ;; NOTE(jenchieh): Deletion..
+          ;; NOTE: Deletion..
           (when is-deleting-line
             (let ((current-linum begin-linum)
                   (record-last-linum begin-linum)
@@ -373,7 +372,7 @@ LENGTH : deletion length."
                 (setq-local line-reminder-saved-lines
                             (remove current-linum line-reminder-saved-lines))
 
-                ;; NOTE(jenchieh): Check if we need to terminate this loop?
+                ;; NOTE: Check if we need to terminate this loop?
                 (when (or
                        ;; Check if still the same as last line.
                        (= current-linum record-last-linum)
@@ -388,7 +387,7 @@ LENGTH : deletion length."
             (line-reminder-delta-list-lines-by-bound-once bound-current-line
                                                           delta-line-count))
 
-          ;; NOTE(jenchieh): Addition..
+          ;; NOTE: Addition..
           (when (and (not is-deleting-line)
                      (not (= begin end))
                      (= length 0))
@@ -414,7 +413,7 @@ LENGTH : deletion length."
                 (forward-line 1)
                 (setq current-linum (line-reminder-get-current-line-integer))
 
-                ;; NOTE(jenchieh): Check if we need to terminate this loop?
+                ;; NOTE: Check if we need to terminate this loop?
                 (when (or
                        ;; Check if still the same as last line.
                        (= current-linum record-last-linum)
