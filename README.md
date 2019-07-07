@@ -8,7 +8,7 @@
 
 | Line Reminder in Emacs Comparison                           | Visual Studio Comparison                                 |
 |:-----------------------------------------------------------:|:--------------------------------------------------------:|
-|<img src="./screenshot/line-reminder-emacs-comparison.png"/> | <img src="./screenshot/line-reminder-vs-comparison.png"/>|
+|<img src="./screenshot/emacs-comparison.png"/> | <img src="./screenshot/vs-comparison.png"/>|
 
 
 ## Configuration
