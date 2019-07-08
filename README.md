@@ -13,6 +13,22 @@
 
 ## Configuration
 
+Buffer Name List that you do not want this mode to take effect.
+```el
+(setq line-reminder-ignore-buffer-names '("*Backtrace*"
+                                          "*Buffer List*"
+                                          "*Checkdoc Status*"
+                                          "*Echo Area"
+                                          "*helm"
+                                          "*Help*"
+                                          "magit"
+                                          "*Minibuf-"
+                                          "*Packages*"
+                                          "*run*"
+                                          "*shell*"
+                                          "*undo-tree*"))
+```
+
 List of face you can customize.
 * `line-reminder-modified-sign-face`
 * `line-reminder-saved-sign-face`
@@ -45,23 +61,6 @@ Customize the symbol of the fringe
 If you change the fringe location by altering this variable.
 ```el
 (setq line-indicators-fringe-placed 'left-fringe)
-```
-
-
-Buffer Name List that you do not want this mode to take effect.
-```el
-(setq line-reminder-ignore-buffer-names '("*Backtrace*"
-                                          "*Buffer List*"
-                                          "*Checkdoc Status*"
-                                          "*Echo Area"
-                                          "*helm"
-                                          "*Help*"
-                                          "magit"
-                                          "*Minibuf-"
-                                          "*Packages*"
-                                          "*run*"
-                                          "*shell*"
-                                          "*undo-tree*"))
 ```
 
 
