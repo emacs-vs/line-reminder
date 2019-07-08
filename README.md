@@ -6,12 +6,18 @@
 # line-reminder
 > Line annotation similar to Visual Studio.
 
-| Line Reminder in Emacs Comparison                           | Visual Studio Comparison                                 |
-|:-----------------------------------------------------------:|:--------------------------------------------------------:|
+| Line Reminder in Emacs Comparison             | Visual Studio Comparison                                 |
+|:---------------------------------------------:|:--------------------------------------------------------:|
 |<img src="./screenshot/emacs-comparison.png"/> | <img src="./screenshot/vs-comparison.png"/>|
 
 
 ## Configuration
+
+List of face you can customize.
+* `line-reminder-modified-sign-face`
+* `line-reminder-saved-sign-face`
+
+### Using linum
 
 Customize the modified sign.
 ```el
@@ -29,9 +35,18 @@ Customize string on the right/left side of the line number.
 (setq line-reminder-linum-right-string " ")
 ```
 
-List of face you can customize.
-* `line-reminder-modified-sign-face`
-* `line-reminder-saved-sign-face`
+### Using indicators
+
+Customize the symbol of the fringe
+```el
+(setq line-indicators-fringe 'filled-rectangle)
+```
+
+If you change the fringe location by altering this variable.
+```el
+(setq line-indicators-fringe-placed 'left-fringe)
+```
+
 
 Buffer Name List that you do not want this mode to take effect.
 ```el
@@ -60,11 +75,6 @@ Or you can just enable in specific buffer you want.
 ```el
 (line-reminder-mode t)
 ```
-
-
-## Dependencies
-
-* [linum](https://www.emacswiki.org/emacs/LineNumbers)
 
 
 ## Contribution
