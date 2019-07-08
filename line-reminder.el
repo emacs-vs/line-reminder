@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
-;; Version: 0.1.4
+;; Version: 0.1.5
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
@@ -43,26 +43,8 @@
 
 
 (defcustom line-reminder-show-option 'linum
-  "Option to show indicators in buffer.")
-
-(defcustom line-reminder-linum-left-string ""
-  "String on the left side of the line number."
-  :group 'line-reminder
-  :type 'string)
-
-(defcustom line-reminder-linum-right-string " "
-  "String on the right side of the line number."
-  :group 'line-reminder
-  :type 'string)
-
-(defcustom line-reminder-modified-sign "▐"
-  "Modified sign."
-  :type 'string
-  :group 'line-reminder)
-
-(defcustom line-reminder-saved-sign "▐"
-  "Saved sign."
-  :type 'string
+  "Option to show indicators in buffer."
+  :type 'symbol
   :group 'line-reminder)
 
 (defface line-reminder-modified-sign-face
@@ -73,6 +55,26 @@
 (defface line-reminder-saved-sign-face
   `((t :foreground "#577430"))
   "Modifed sign face."
+  :group 'line-reminder)
+
+(defcustom line-reminder-linum-left-string ""
+  "String on the left side of the line number."
+  :type 'string
+  :group 'line-reminder)
+
+(defcustom line-reminder-linum-right-string " "
+  "String on the right side of the line number."
+  :type 'string
+  :group 'line-reminder)
+
+(defcustom line-reminder-modified-sign "▐"
+  "Modified sign."
+  :type 'string
+  :group 'line-reminder)
+
+(defcustom line-reminder-saved-sign "▐"
+  "Saved sign."
+  :type 'string
   :group 'line-reminder)
 
 (defcustom line-reminder-fringe-placed 'left-fringe
