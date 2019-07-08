@@ -44,8 +44,9 @@
 
 (defcustom line-reminder-show-option 'linum
   "Option to show indicators in buffer."
-  :type 'symbol
-  :group 'line-reminder)
+  :group 'line-reminder
+  :type '(choice (const :tag "linum" linum)
+                 (const :tag "indicators" indicators)))
 
 (defface line-reminder-modified-sign-face
   `((t :foreground "#EFF284"))
@@ -404,7 +405,7 @@ LENGTH : deletion length."
                 ;; Remove line because we are deleting.
                 (setq-local line-reminder--change-lines
                             (remove current-linum line-reminder--change-lines))
-                (setq-local line-reminder--saved-lines
+                (setq-local line-reminder--saved-lines
                             (remove current-linum line-reminder--saved-lines))
 
                 ;; NOTE: Check if we need to terminate this loop?
