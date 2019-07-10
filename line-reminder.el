@@ -147,7 +147,11 @@ IN-STR : string using to check if is contain one of the IN-LIST."
                                 :relative nil
                                 :fringe line-reminder-fringe-placed
                                 :bitmap line-reminder-fringe
-                                :face fc))
+                                :face fc
+                                :priority
+                                (cond
+                                 ((equal fc 'line-reminder-modified-sign-face) 10)
+                                 ((equal fc 'line-reminder-saved-sign-face) 1))))
 
 (defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
@@ -378,6 +382,8 @@ LENGTH : deletion length."
 
         ;; Just add the current line.
         (push begin-linum line-reminder--change-lines)
+        (when (equal line-reminder-show-option 'indicators)
+          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
         ;; If adding line, bound is the begin line number.
         (setq bound-current-line begin-linum)
@@ -441,6 +447,8 @@ LENGTH : deletion length."
 
                 ;; Push the current line to changes-line.
                 (push current-linum line-reminder--change-lines)
+                (when (equal line-reminder-show-option 'indicators)
+                  (line-reminder--mark-line-by-linum current-linum 'line-reminder-modified-sign-face))
 
                 ;; To do the next line.
                 (forward-line 1)
@@ -462,9 +470,7 @@ LENGTH : deletion length."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)
-
-        (line-reminder--mark-buffer)))))
+        (line-reminder--remove-lines-out-range-once)))))
 
 
 (defun line-reminder-enable ()
