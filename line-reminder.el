@@ -143,6 +143,7 @@ IN-STR : string using to check if is contain one of the IN-LIST."
   "Mark the line by using line number.
 LN : Line number.
 FC : Face to apply."
+  (require 'indicators)
   (ind-create-indicator-at-line ln
                                 :managed t
                                 :dynamic t
