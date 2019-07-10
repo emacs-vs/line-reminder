@@ -143,7 +143,6 @@ IN-STR : string using to check if is contain one of the IN-LIST."
   "Mark the line by using line number.
 LN : Line number.
 FC : Face to apply."
-  (require 'indicators)
   (ind-create-indicator-at-line ln
                                 :managed t
                                 :dynamic t
@@ -330,7 +329,6 @@ IN-LIST : list to be remove or take effect with."
 (defun line-reminder--ind-clear-indicators-absolute ()
   "Clean up all the indicators."
   (when (equal line-reminder-show-option 'indicators)
-    (require 'indicators)
     (ind-clear-indicators-absolute)))
 
 (defun line-reminder--mark-buffer ()
@@ -488,9 +486,12 @@ LENGTH : deletion length."
 
 (defun line-reminder-enable ()
   "Enable `line-reminder' in current buffer."
-  (when (equal line-reminder-show-option 'linum)
-    (require 'linum)
-    (setq-local linum-format 'line-reminder-linum-format))
+  (cond ((equal line-reminder-show-option 'linum)
+         (progn
+           (require 'linum)
+           (setq-local linum-format 'line-reminder-linum-format)))
+        ((equal line-reminder-show-option 'indicators)
+         (require 'indicators)))
   (add-hook 'before-change-functions #'line-reminder-before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
   (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
