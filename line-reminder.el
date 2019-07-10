@@ -140,9 +140,7 @@ IN-STR : string using to check if is contain one of the IN-LIST."
   (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 
 (defun line-reminder--mark-line-by-linum (ln fc)
-  "Mark the line by using line number.
-LN : Line number.
-FC : Face to apply."
+  "Mark the line LN by using face name FC."
   (ind-create-indicator-at-line ln
                                 :managed t
                                 :dynamic t
@@ -150,17 +148,6 @@ FC : Face to apply."
                                 :fringe line-reminder-fringe-placed
                                 :bitmap line-reminder-fringe
                                 :face fc))
-
-(defun line-reminder--ind-remove-indicator-at-line (line)
-  "Remoe the indicator on LINE."
-  (save-excursion
-    (goto-char (point-min))
-    (forward-line (1- line))
-    (line-reminder--ind-remove-indicator (point))))
-
-(defun line-reminder--ind-remove-indicator (pos)
-  "Remove the indicator to position POS."
-  (remove-overlays pos pos 'ind-indicator-absolute t))
 
 (defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
@@ -256,12 +243,12 @@ END : end changing point."
            end)
       (and (not buffer-read-only)
            (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
-                                                      (buffer-name)))
+                                                       (buffer-name)))
            (<= begin (point-max))
            (<= end (point-max)))
     (and (not buffer-read-only)
          (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
-                                                    (buffer-name))))))
+                                                     (buffer-name))))))
 
 (defun line-reminder--delta-list-lines-by-bound (in-list bound delta)
   "Delta the count of line in the list by bound.
@@ -282,13 +269,13 @@ DELTA-LINE-COUNT : Delta line count."
   ;; Add up delta line count to `change-lines' list.
   (setq-local line-reminder--change-lines
               (line-reminder--delta-list-lines-by-bound line-reminder--change-lines
-                                                       bound-current-line
-                                                       delta-line-count))
+                                                        bound-current-line
+                                                        delta-line-count))
   ;; Add up delta line count to `saved-lines' list.
   (setq-local line-reminder--saved-lines
               (line-reminder--delta-list-lines-by-bound line-reminder--saved-lines
-                                                       bound-current-line
-                                                       delta-line-count)))
+                                                        bound-current-line
+                                                        delta-line-count)))
 
 (defun line-reminder--remove-lines-out-range (in-list)
   "Remove all the line in the list that are above the last/maxinum line \
@@ -391,9 +378,6 @@ LENGTH : deletion length."
 
         ;; Just add the current line.
         (push begin-linum line-reminder--change-lines)
-        (when (equal line-reminder-show-option 'indicators)
-          (line-reminder--ind-remove-indicator-at-line begin-linum)
-          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
         ;; If adding line, bound is the begin line number.
         (setq bound-current-line begin-linum)
@@ -434,14 +418,14 @@ LENGTH : deletion length."
                 (setq record-last-linum current-linum)))
 
             (line-reminder--delta-list-lines-by-bound-once bound-current-line
-                                                          delta-line-count))
+                                                           delta-line-count))
 
           ;; NOTE: Addition..
           (when (and (not is-deleting-line)
                      (not (= begin end))
                      (= length 0))
             (line-reminder--delta-list-lines-by-bound-once bound-current-line
-                                                          delta-line-count)
+                                                           delta-line-count)
 
             ;; Adding line. (After adding line/lines, we just need to loop
             ;; throught those lines and add it to `line-reminder--change-lines'
@@ -457,9 +441,6 @@ LENGTH : deletion length."
 
                 ;; Push the current line to changes-line.
                 (push current-linum line-reminder--change-lines)
-                (when (equal line-reminder-show-option 'indicators)
-                  (line-reminder--ind-remove-indicator-at-line current-linum)
-                  (line-reminder--mark-line-by-linum current-linum 'line-reminder-modified-sign-face))
 
                 ;; To do the next line.
                 (forward-line 1)
@@ -481,7 +462,9 @@ LENGTH : deletion length."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)))))
+        (line-reminder--remove-lines-out-range-once)
+
+        (line-reminder--mark-buffer)))))
 
 
 (defun line-reminder-enable ()
