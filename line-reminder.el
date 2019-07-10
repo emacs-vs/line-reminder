@@ -151,6 +151,17 @@ FC : Face to apply."
                                 :bitmap line-reminder-fringe
                                 :face fc))
 
+(defun line-reminder--ind-remove-indicator-at-line (line)
+  "Remoe the indicator on LINE."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (line-reminder--ind-remove-indicator (point))))
+
+(defun line-reminder--ind-remove-indicator (pos)
+  "Remove the indicator to position POS."
+  (remove-overlays pos pos 'ind-indicator-absolute t))
+
 (defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
@@ -381,6 +392,9 @@ LENGTH : deletion length."
 
         ;; Just add the current line.
         (push begin-linum line-reminder--change-lines)
+        (when (equal line-reminder-show-option 'indicators)
+          (line-reminder--ind-remove-indicator-at-line begin-linum)
+          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
         ;; If adding line, bound is the begin line number.
         (setq bound-current-line begin-linum)
@@ -405,7 +419,7 @@ LENGTH : deletion length."
                 ;; Remove line because we are deleting.
                 (setq-local line-reminder--change-lines
                             (remove current-linum line-reminder--change-lines))
-                (setq-local line-reminder--saved-lines
+                (setq-local line-reminder--saved-lines
                             (remove current-linum line-reminder--saved-lines))
 
                 ;; NOTE: Check if we need to terminate this loop?
@@ -444,6 +458,9 @@ LENGTH : deletion length."
 
                 ;; Push the current line to changes-line.
                 (push current-linum line-reminder--change-lines)
+                (when (equal line-reminder-show-option 'indicators)
+                  (line-reminder--ind-remove-indicator-at-line current-linum)
+                  (line-reminder--mark-line-by-linum current-linum 'line-reminder-modified-sign-face))
 
                 ;; To do the next line.
                 (forward-line 1)
@@ -465,9 +482,7 @@ LENGTH : deletion length."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)
-
-        (line-reminder--mark-buffer)))))
+        (line-reminder--remove-lines-out-range-once)))))
 
 
 (defun line-reminder-enable ()
