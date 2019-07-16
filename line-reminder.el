@@ -141,17 +141,19 @@ IN-STR : string using to check if is contain one of the IN-LIST."
 
 (defun line-reminder--mark-line-by-linum (ln fc)
   "Mark the line LN by using face name FC."
-  (ind-create-indicator-at-line ln
-                                :managed t
-                                :dynamic t
-                                :relative nil
-                                :fringe line-reminder-fringe-placed
-                                :bitmap line-reminder-fringe
-                                :face fc
-                                :priority
-                                (cond
-                                 ((equal fc 'line-reminder-modified-sign-face) 10)
-                                 ((equal fc 'line-reminder-saved-sign-face) 1))))
+  (let ((inhibit-message t)
+        (message-log-max nil))
+    (ind-create-indicator-at-line ln
+                                  :managed t
+                                  :dynamic t
+                                  :relative nil
+                                  :fringe line-reminder-fringe-placed
+                                  :bitmap line-reminder-fringe
+                                  :face fc
+                                  :priority
+                                  (cond
+                                   ((equal fc 'line-reminder-modified-sign-face) 10)
+                                   ((equal fc 'line-reminder-saved-sign-face) 1)))))
 
 (defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
