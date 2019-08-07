@@ -133,10 +133,7 @@
   (line-number-at-pos (point-max)))
 
 (defun line-reminder--is-contain-list-string (in-list in-str)
-  "Check if a string contain in any string in the string list.
-IN-LIST : list of string use to check if IN-STR in contain one of
-the string.
-IN-STR : string using to check if is contain one of the IN-LIST."
+  "Check if a IN-STR contain in any string in the IN-LIST."
   (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 
 (defun line-reminder--mark-line-by-linum (ln fc)
@@ -154,6 +151,31 @@ IN-STR : string using to check if is contain one of the IN-LIST."
                                   (cond
                                    ((equal fc 'line-reminder-modified-sign-face) 10)
                                    ((equal fc 'line-reminder-saved-sign-face) 1)))))
+
+(defun line-reminder--ind-remove-indicator-at-line (line)
+  "Remove the indicator on LINE."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (line-reminder--ind-remove-indicator (point))))
+
+(defun line-reminder--ind-remove-indicator (pos)
+  "Remove the indicator to position POS."
+  (save-excursion
+    (goto-char pos)
+    (delete-dups ind-managed-absolute-indicators)
+    (let ((start-pt (1+ (line-beginning-position)))
+          (end-pt (line-end-position))
+          (remove-inds '()))
+      (dolist (ind ind-managed-absolute-indicators)
+        (let* ((pos (car ind))
+               (mkr-pos (marker-position pos)))
+          (when (and (>= mkr-pos start-pt)
+                     (<= mkr-pos end-pt))
+            (push ind remove-inds))))
+      (dolist (ind remove-inds)
+        (setq ind-managed-absolute-indicators (remove ind ind-managed-absolute-indicators)))
+      (remove-overlays start-pt end-pt 'ind-indicator-absolute t))))
 
 (defsubst line-reminder-linum-format-string-align-right ()
   "Return format string align on the right."
@@ -295,7 +317,8 @@ IN-LIST : list to be remove or take effect with."
       (when (or (< last-line-in-buffer line)
                 (<= line 0))
         ;; Remove line because we are deleting.
-        (setq tmp-lst (remove line tmp-lst))))
+        (setq tmp-lst (remove line tmp-lst))
+        (line-reminder--ind-remove-indicator-at-line line)))
     tmp-lst))
 
 (defun line-reminder--remove-lines-out-range-once ()
@@ -412,6 +435,7 @@ LENGTH : deletion length."
                             (remove current-linum line-reminder--change-lines))
                 (setq-local line-reminder--saved-lines
                             (remove current-linum line-reminder--saved-lines))
+                (line-reminder--ind-remove-indicator-at-line current-linum)
 
                 ;; NOTE: Check if we need to terminate this loop?
                 (when (or
