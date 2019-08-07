@@ -318,7 +318,8 @@ IN-LIST : list to be remove or take effect with."
                 (<= line 0))
         ;; Remove line because we are deleting.
         (setq tmp-lst (remove line tmp-lst))
-        (line-reminder--ind-remove-indicator-at-line line)))
+        (when (equal line-reminder-show-option 'indicators)
+          (line-reminder--ind-remove-indicator-at-line line))))
     tmp-lst))
 
 (defun line-reminder--remove-lines-out-range-once ()
@@ -435,7 +436,8 @@ LENGTH : deletion length."
                             (remove current-linum line-reminder--change-lines))
                 (setq-local line-reminder--saved-lines
                             (remove current-linum line-reminder--saved-lines))
-                (line-reminder--ind-remove-indicator-at-line current-linum)
+                (when (equal line-reminder-show-option 'indicators)
+                  (line-reminder--ind-remove-indicator-at-line current-linum))
 
                 ;; NOTE: Check if we need to terminate this loop?
                 (when (or
