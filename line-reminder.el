@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
@@ -399,6 +399,11 @@ IN-LIST : list to be remove or take effect with."
         (setq delta-line-count (- end-linum begin-linum))
         (when is-deleting-line
           (setq delta-line-count (- 0 delta-line-count)))
+
+        ;; Just add the current line.
+        (push begin-linum line-reminder--change-lines)
+        (when (equal line-reminder-show-option 'indicators)
+          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
         ;; If adding line, bound is the begin line number.
         (setq bound-current-line begin-linum)
