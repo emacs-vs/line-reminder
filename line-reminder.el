@@ -353,8 +353,6 @@ IN-LIST : list to be remove or take effect with."
   (when (equal line-reminder-show-option 'indicators)
     (save-excursion
       (line-reminder--ind-clear-indicators-absolute)
-      (setq line-reminder--change-lines (cl-sort line-reminder--change-lines '<))
-      (setq line-reminder--saved-lines (cl-sort line-reminder--saved-lines '<))
       (dolist (ln line-reminder--change-lines)
         (line-reminder--mark-line-by-linum ln 'line-reminder-modified-sign-face))
       (dolist (ln line-reminder--saved-lines)
@@ -494,7 +492,9 @@ IN-LIST : list to be remove or take effect with."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)))))
+        (line-reminder--remove-lines-out-range-once)
+
+        (line-reminder--mark-buffer)))))
 
 
 (defun line-reminder-enable ()
