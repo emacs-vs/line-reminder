@@ -492,9 +492,7 @@ IN-LIST : list to be remove or take effect with."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)
-
-        (line-reminder--mark-buffer)))))
+        (line-reminder--remove-lines-out-range-once)))))
 
 
 (defun line-reminder-enable ()
