@@ -1,4 +1,4 @@
-;;; line-reminder.el --- Line annotation similar to Visual Studio.  -*- lexical-binding: t; -*-
+;;; line-reminder.el --- Line annotation similar to Visual Studio  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Shen, Jen-Chieh
 ;; Created date 2018-05-25 15:10:29
@@ -7,7 +7,7 @@
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation linum reminder
 ;; Version: 0.2.3
-;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
+;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs090218/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
