@@ -34,13 +34,11 @@
 
 (require 'cl-lib)
 
-
 (defgroup line-reminder nil
   "Visual Studio like line annotation in Emacs."
   :prefix "line-reminder-"
   :group 'tool
   :link '(url-link :tag "Repository" "https://github.com/jcs090218/line-reminder"))
-
 
 (defcustom line-reminder-show-option 'linum
   "Option to show indicators in buffer."
@@ -56,6 +54,16 @@
 (defface line-reminder-saved-sign-face
   `((t :foreground "#577430"))
   "Modifed sign face."
+  :group 'line-reminder)
+
+(defcustom line-reminder-modified-sign-priority 10
+  "Display priority for modified sign."
+  :type 'integer
+  :group 'line-reminder)
+
+(defcustom line-reminder-saved-sign-priority 1
+  "Display priority for saved sign."
+  :type 'integer
   :group 'line-reminder)
 
 (defcustom line-reminder-linum-left-string ""
@@ -104,9 +112,6 @@
   :type 'list
   :group 'line-reminder)
 
-;; ----------------------------------------------------------------------------
-;; ----------------------------------------------------------------------------
-
 (defvar-local line-reminder--change-lines '()
   "List of line that change in current temp buffer.")
 
@@ -125,8 +130,7 @@
 (defvar-local line-reminder--before-end-linum -1
   "Record down the before end line number.")
 
-;; ----------------------------------------------------------------------------
-;; ----------------------------------------------------------------------------
+;;; Util
 
 (defun line-reminder--total-line ()
   "Return current buffer's maxinum line."
@@ -138,8 +142,7 @@
 
 (defun line-reminder--mark-line-by-linum (ln fc)
   "Mark the line LN by using face name FC."
-  (let ((inhibit-message t)
-        (message-log-max nil))
+  (let ((inhibit-message t) (message-log-max nil))
     (ind-create-indicator-at-line ln
                                   :managed t
                                   :dynamic t
@@ -148,9 +151,11 @@
                                   :bitmap line-reminder-fringe
                                   :face fc
                                   :priority
-                                  (cond
-                                   ((equal fc 'line-reminder-modified-sign-face) 10)
-                                   ((equal fc 'line-reminder-saved-sign-face) 1)))))
+                                  (cl-case fc
+                                    ('line-reminder-modified-sign-face
+                                     line-reminder-modified-sign-priority)
+                                    ('line-reminder-saved-sign-face
+                                     line-reminder-saved-sign-priority)))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
   "Remove the indicator on LINE."
@@ -177,30 +182,29 @@
         (setq ind-managed-absolute-indicators (remove ind ind-managed-absolute-indicators)))
       (remove-overlays start-pt end-pt 'ind-indicator-absolute t))))
 
-(defsubst line-reminder-linum-format-string-align-right ()
+(defsubst line-reminder--linum-format-string-align-right ()
   "Return format string align on the right."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
     (format "%%%dd" w)))
 
-(defsubst line-reminder-get-propertized-normal-sign (ln)
+(defsubst line-reminder--get-propertized-normal-sign (ln)
   "Return a default propertized normal sign.
 LN : pass in by `linum-format' variable."
   (propertize (format (concat line-reminder-linum-left-string
-                              (line-reminder-linum-format-string-align-right)
+                              (line-reminder--linum-format-string-align-right)
                               line-reminder-linum-right-string)
                       ln)
               'face 'linum))
 
-(defsubst line-reminder-get-propertized-modified-sign ()
+(defsubst line-reminder--get-propertized-modified-sign ()
   "Return a propertized modifoied sign."
   (propertize line-reminder-modified-sign 'face 'line-reminder-modified-sign-face))
 
-(defsubst line-reminder-get-propertized-saved-sign ()
+(defsubst line-reminder--get-propertized-saved-sign ()
   "Return a propertized saved sign."
   (propertize line-reminder-saved-sign 'face 'line-reminder-saved-sign-face))
 
-
-(defun line-reminder-propertized-sign-by-type (type &optional ln)
+(defun line-reminder--propertized-sign-by-type (type &optional ln)
   "Return a propertized sign string by type.
 TYPE : type of the propertize sign you want.
 LN : Pass is line number for normal sign."
@@ -208,37 +212,35 @@ LN : Pass is line number for normal sign."
     ('normal (if (not ln)
                  (error "Normal line but with no line number pass in")
                ;; Just return normal linum format.
-               (line-reminder-get-propertized-normal-sign ln)))
-    ('modified (line-reminder-get-propertized-modified-sign))
-    ('saved (line-reminder-get-propertized-saved-sign))))
+               (line-reminder--get-propertized-normal-sign ln)))
+    ('modified (line-reminder--get-propertized-modified-sign))
+    ('saved (line-reminder--get-propertized-saved-sign))))
 
-
-(defun line-reminder-is-contain-list-integer (in-list in-int)
+(defun line-reminder--is-contain-list-integer (in-list in-int)
   "Check if a integer contain in any string in the string list.
 IN-LIST : list of integer use to check if IN-INT in contain one of the integer.
 IN-INT : integer using to check if is contain one of the IN-LIST."
   (cl-some #'(lambda (lb-sub-int) (= lb-sub-int in-int)) in-list))
 
-
-(defun line-reminder-linum-format (ln)
+(defun line-reminder--linum-format (ln)
   "Core line reminder format string logic here.
 LN : pass in by `linum-format' variable."
   (let ((reminder-sign "")
         (result-sign "")
-        (normal-sign (line-reminder-propertized-sign-by-type 'normal ln))
+        (normal-sign (line-reminder--propertized-sign-by-type 'normal ln))
         (is-sign-exists nil))
 
     (cond (;; NOTE: Check if change lines list.
-           (line-reminder-is-contain-list-integer line-reminder--change-lines
+           (line-reminder--is-contain-list-integer line-reminder--change-lines
                                                   ln)
            (progn
-             (setq reminder-sign (line-reminder-propertized-sign-by-type 'modified))
+             (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified))
              (setq is-sign-exists t)))
           (;; NOTE: Check if saved lines list.
-           (line-reminder-is-contain-list-integer line-reminder--saved-lines
+           (line-reminder--is-contain-list-integer line-reminder--saved-lines
                                                   ln)
            (progn
-             (setq reminder-sign (line-reminder-propertized-sign-by-type 'saved))
+             (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved))
              (setq is-sign-exists t))))
 
 
@@ -252,8 +254,7 @@ LN : pass in by `linum-format' variable."
     (setq result-sign (concat normal-sign reminder-sign))
     result-sign))
 
-;; ----------------------------------------------------------------------------
-;; ----------------------------------------------------------------------------
+;;; Core
 
 ;;;###autoload
 (defun line-reminder-clear-reminder-lines-sign ()
@@ -267,8 +268,7 @@ LN : pass in by `linum-format' variable."
   "Check if is valid to apply line reminder at the moment.
 BEGIN : start changing point.
 END : end changing point."
-  (if (and begin
-           end)
+  (if (and begin end)
       (and (not buffer-read-only)
            (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
                                                        (buffer-name)))
@@ -336,10 +336,8 @@ IN-LIST : list to be remove or take effect with."
   ;; Clear the change lines.
   (setq-local line-reminder--change-lines '())
 
-  ;; Removed save duplicates
-  (delete-dups line-reminder--saved-lines)
-  ;; Remove out range.
-  (line-reminder--remove-lines-out-range-once)
+  (delete-dups line-reminder--saved-lines)  ; Removed save duplicates
+  (line-reminder--remove-lines-out-range-once)  ; Remove out range.
 
   (line-reminder--mark-buffer))
 
@@ -358,7 +356,6 @@ IN-LIST : list to be remove or take effect with."
       (dolist (ln line-reminder--saved-lines)
         (line-reminder--mark-line-by-linum ln 'line-reminder-saved-sign-face)))))
 
-
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed with BEGIN and END."
   (when (line-reminder--is-valid-line-reminder-situation begin end)
@@ -371,21 +368,20 @@ IN-LIST : list to be remove or take effect with."
   "Do stuff after buffer is changed with BEGIN, END and LENGTH."
   (when (line-reminder--is-valid-line-reminder-situation begin end)
     (save-excursion
-      ;; When begin and end are not the same, meaning the there
-      ;; is addition/deletion happening in the current buffer.
-      (let ((begin-linum -1)
-            (end-linum -1)
+      ;; When begin and end are not the same, meaning the there is addition/deletion
+      ;; happening in the current buffer.
+      (let ((begin-linum -1) (end-linum -1)
             (delta-line-count 0)
-            ;; Current line is the bound. Is the line after we do
-            ;; either addition/subtraction.
+            ;; Current line is the bound. Is the line after we do either
+            ;; addition/subtraction.
             (bound-current-line -1)
             ;; Is deleting line or adding new line?
-            (is-deleting-line nil))
+            (is-deleting-line-p nil))
 
         ;; Is deleting line can be depends on the length.
         (when  (= begin end)
-          (setq is-deleting-line t))
-        (if is-deleting-line
+          (setq is-deleting-line-p t))
+        (if is-deleting-line-p
             (progn
               (setq begin line-reminder--before-begin-pt)
               (setq end line-reminder--before-end-pt)
@@ -397,7 +393,7 @@ IN-LIST : list to be remove or take effect with."
         (goto-char begin)
 
         (setq delta-line-count (- end-linum begin-linum))
-        (when is-deleting-line
+        (when is-deleting-line-p
           (setq delta-line-count (- 0 delta-line-count)))
 
         ;; Just add the current line.
@@ -408,15 +404,12 @@ IN-LIST : list to be remove or take effect with."
         ;; If adding line, bound is the begin line number.
         (setq bound-current-line begin-linum)
 
-
-        (when (or (not (= begin-linum end-linum))
-                  (not (= delta-line-count 0)))
+        (when (or (not (= begin-linum end-linum)) (not (= delta-line-count 0)))
           (line-reminder--remove-lines-out-range-once)
 
           ;; NOTE: Deletion..
-          (when is-deleting-line
-            (let ((current-linum begin-linum)
-                  (record-last-linum begin-linum)
+          (when is-deleting-line-p
+            (let ((current-linum begin-linum) (record-last-linum begin-linum)
                   (reach-last-line-in-buffer nil))
               (while (and (< current-linum end-linum)
                           ;; Cannot be the same as last line in buffer.
@@ -441,8 +434,7 @@ IN-LIST : list to be remove or take effect with."
                        (= current-linum (line-reminder--total-line)))
                   (setq reach-last-line-in-buffer t))
 
-                ;; Update the last linum, make sure it won't do the same
-                ;; line twice.
+                ;; Update the last linum, make sure it won't do the same line twice.
                 (setq record-last-linum current-linum)))
 
             (line-reminder--delta-list-lines-by-bound-once bound-current-line
@@ -454,9 +446,7 @@ IN-LIST : list to be remove or take effect with."
             (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
           ;; NOTE: Addition..
-          (when (and (not is-deleting-line)
-                     (not (= begin end))
-                     (= length 0))
+          (when (and (not is-deleting-line-p) (not (= begin end)) (= length 0))
             (line-reminder--delta-list-lines-by-bound-once bound-current-line
                                                            delta-line-count)
 
@@ -464,8 +454,8 @@ IN-LIST : list to be remove or take effect with."
             ;; throught those lines and add it to `line-reminder--change-lines'
             ;; list.)
             (let ((current-linum begin-linum)
-                  ;; Record down the last current line number, to make
-                  ;; sure that we don't fall into infinite loop.
+                  ;; Record down the last current line number, to make sure that
+                  ;; we don't fall into infinite loop.
                   (record-last-linum begin-linum)
                   (reach-last-line-in-buffer nil))
               (while (and (<= current-linum end-linum)
@@ -499,15 +489,16 @@ IN-LIST : list to be remove or take effect with."
         ;; Remove out range.
         (line-reminder--remove-lines-out-range-once)))))
 
+;;; Loading
 
 (defun line-reminder-enable ()
   "Enable `line-reminder' in current buffer."
-  (cond ((equal line-reminder-show-option 'linum)
-         (progn
-           (require 'linum)
-           (setq-local linum-format 'line-reminder-linum-format)))
-        ((equal line-reminder-show-option 'indicators)
-         (require 'indicators)))
+  (cl-case line-reminder-show-option
+    ('linum
+     (require 'linum)
+     (setq-local linum-format 'line-reminder--linum-format))
+    ('indicators
+     (require 'indicators)))
   (add-hook 'before-change-functions #'line-reminder-before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
   (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
@@ -518,7 +509,6 @@ IN-LIST : list to be remove or take effect with."
   (remove-hook 'after-change-functions #'line-reminder-after-change-functions t)
   (advice-remove 'save-buffer #'line-reminder-transfer-to-saved-lines)
   (line-reminder-clear-reminder-lines-sign))
-
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
@@ -537,7 +527,6 @@ IN-LIST : list to be remove or take effect with."
 (define-globalized-minor-mode global-line-reminder-mode
   line-reminder-mode line-reminder-turn-on-line-reminder-mode
   :require 'line-reminder)
-
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
