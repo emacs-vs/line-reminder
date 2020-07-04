@@ -112,6 +112,14 @@
   :type 'list
   :group 'line-reminder)
 
+(defcustom line-reminder-disable-commands '()
+  "List of commands that wouldn't take effect from this package."
+  :type 'list
+  :group 'line-reminder)
+
+(defvar-local line-reminder--is-disable-command-p nil
+  "Flag to check if current command the disable command.")
+
 (defvar-local line-reminder--change-lines '()
   "List of line that change in current temp buffer.")
 
@@ -169,14 +177,11 @@
   (save-excursion
     (goto-char pos)
     (delete-dups ind-managed-absolute-indicators)
-    (let ((start-pt (1+ (line-beginning-position)))
-          (end-pt (line-end-position))
+    (let ((start-pt (1+ (line-beginning-position))) (end-pt (line-end-position))
           (remove-inds '()))
       (dolist (ind ind-managed-absolute-indicators)
-        (let* ((pos (car ind))
-               (mkr-pos (marker-position pos)))
-          (when (and (>= mkr-pos start-pt)
-                     (<= mkr-pos end-pt))
+        (let* ((pos (car ind)) (mkr-pos (marker-position pos)))
+          (when (and (>= mkr-pos start-pt) (<= mkr-pos end-pt))
             (push ind remove-inds))))
       (dolist (ind remove-inds)
         (setq ind-managed-absolute-indicators (remove ind ind-managed-absolute-indicators)))
@@ -225,24 +230,20 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 (defun line-reminder--linum-format (ln)
   "Core line reminder format string logic here.
 LN : pass in by `linum-format' variable."
-  (let ((reminder-sign "")
-        (result-sign "")
+  (let ((reminder-sign "") (result-sign "")
         (normal-sign (line-reminder--propertized-sign-by-type 'normal ln))
         (is-sign-exists nil))
-
-    (cond (;; NOTE: Check if change lines list.
-           (line-reminder--is-contain-list-integer line-reminder--change-lines
-                                                  ln)
-           (progn
-             (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified))
-             (setq is-sign-exists t)))
-          (;; NOTE: Check if saved lines list.
-           (line-reminder--is-contain-list-integer line-reminder--saved-lines
-                                                  ln)
-           (progn
-             (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved))
-             (setq is-sign-exists t))))
-
+    (cond
+     ;; NOTE: Check if change lines list.
+     ((line-reminder--is-contain-list-integer line-reminder--change-lines ln)
+      (progn
+        (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified))
+        (setq is-sign-exists t)))
+     ;; NOTE: Check if saved lines list.
+     ((line-reminder--is-contain-list-integer line-reminder--saved-lines ln)
+      (progn
+        (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved))
+        (setq is-sign-exists t))))
 
     ;; If the sign exist, then remove the last character from the normal sign.
     ;; So we can keep our the margin/padding the same without modifing the
@@ -260,8 +261,8 @@ LN : pass in by `linum-format' variable."
 (defun line-reminder-clear-reminder-lines-sign ()
   "Clear all the reminder lines' sign."
   (interactive)
-  (setq-local line-reminder--change-lines '())
-  (setq-local line-reminder--saved-lines '())
+  (setq line-reminder--change-lines '())
+  (setq line-reminder--saved-lines '())
   (line-reminder--ind-clear-indicators-absolute))
 
 (defun line-reminder--is-valid-line-reminder-situation (&optional begin end)
@@ -295,15 +296,15 @@ DELTA : addition/subtraction value of the line count."
 BOUND-CURRENT-LINE  : Center line number.
 DELTA-LINE-COUNT : Delta line count."
   ;; Add up delta line count to `change-lines' list.
-  (setq-local line-reminder--change-lines
-              (line-reminder--delta-list-lines-by-bound line-reminder--change-lines
-                                                        bound-current-line
-                                                        delta-line-count))
+  (setq line-reminder--change-lines
+        (line-reminder--delta-list-lines-by-bound line-reminder--change-lines
+                                                  bound-current-line
+                                                  delta-line-count))
   ;; Add up delta line count to `saved-lines' list.
-  (setq-local line-reminder--saved-lines
-              (line-reminder--delta-list-lines-by-bound line-reminder--saved-lines
-                                                        bound-current-line
-                                                        delta-line-count)))
+  (setq line-reminder--saved-lines
+        (line-reminder--delta-list-lines-by-bound line-reminder--saved-lines
+                                                  bound-current-line
+                                                  delta-line-count)))
 
 (defun line-reminder--remove-lines-out-range (in-list)
   "Remove all the line in the list that are above the last/maxinum line \
@@ -324,17 +325,17 @@ IN-LIST : list to be remove or take effect with."
 
 (defun line-reminder--remove-lines-out-range-once ()
   "Do `line-reminder--remove-lines-out-range' to all line list apply to this mode."
-  (setq-local line-reminder--change-lines (line-reminder--remove-lines-out-range line-reminder--change-lines))
-  (setq-local line-reminder--saved-lines (line-reminder--remove-lines-out-range line-reminder--saved-lines)))
+  (setq line-reminder--change-lines (line-reminder--remove-lines-out-range line-reminder--change-lines))
+  (setq line-reminder--saved-lines (line-reminder--remove-lines-out-range line-reminder--saved-lines)))
 
 ;;;###autoload
 (defun line-reminder-transfer-to-saved-lines ()
   "Transfer the `change-lines' to `saved-lines'."
   (interactive)
-  (setq-local line-reminder--saved-lines
-              (append line-reminder--saved-lines line-reminder--change-lines))
+  (setq line-reminder--saved-lines
+        (append line-reminder--saved-lines line-reminder--change-lines))
   ;; Clear the change lines.
-  (setq-local line-reminder--change-lines '())
+  (setq line-reminder--change-lines '())
 
   (delete-dups line-reminder--saved-lines)  ; Removed save duplicates
   (line-reminder--remove-lines-out-range-once)  ; Remove out range.
@@ -358,15 +359,18 @@ IN-LIST : list to be remove or take effect with."
 
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed with BEGIN and END."
-  (when (line-reminder--is-valid-line-reminder-situation begin end)
-    (setq-local line-reminder--before-begin-pt begin)
-    (setq-local line-reminder--before-end-pt end)
-    (setq-local line-reminder--before-begin-linum (line-number-at-pos begin))
-    (setq-local line-reminder--before-end-linum (line-number-at-pos end))))
+  (setq line-reminder--is-disable-command-p (memq this-command line-reminder-disable-commands))
+  (when (and (not line-reminder--is-disable-command-p)
+             (line-reminder--is-valid-line-reminder-situation begin end))
+    (setq line-reminder--before-begin-pt begin)
+    (setq line-reminder--before-end-pt end)
+    (setq line-reminder--before-begin-linum (line-number-at-pos begin))
+    (setq line-reminder--before-end-linum (line-number-at-pos end))))
 
 (defun line-reminder-after-change-functions (begin end length)
   "Do stuff after buffer is changed with BEGIN, END and LENGTH."
-  (when (line-reminder--is-valid-line-reminder-situation begin end)
+  (when (and (not line-reminder--is-disable-command-p)
+             (line-reminder--is-valid-line-reminder-situation begin end))
     (save-excursion
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
@@ -419,10 +423,10 @@ IN-LIST : list to be remove or take effect with."
                 (setq current-linum (line-number-at-pos))
 
                 ;; Remove line because we are deleting.
-                (setq-local line-reminder--change-lines
-                            (remove current-linum line-reminder--change-lines))
-                (setq-local line-reminder--saved-lines
-                            (remove current-linum line-reminder--saved-lines))
+                (setq line-reminder--change-lines
+                      (remove current-linum line-reminder--change-lines))
+                (setq line-reminder--saved-lines
+                      (remove current-linum line-reminder--saved-lines))
                 (when (equal line-reminder-show-option 'indicators)
                   (line-reminder--ind-remove-indicator-at-line current-linum))
 
@@ -515,9 +519,7 @@ IN-LIST : list to be remove or take effect with."
   "Minor mode 'line-reminder-mode'."
   :lighter " LR"
   :group line-reminder
-  (if line-reminder-mode
-      (line-reminder-enable)
-    (line-reminder-disable)))
+  (if line-reminder-mode (line-reminder-enable) (line-reminder-disable)))
 
 (defun line-reminder-turn-on-line-reminder-mode ()
   "Turn on the 'line-reminder-mode'."
