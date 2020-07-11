@@ -283,32 +283,25 @@ END : end changing point."
          (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
                                                      (buffer-name))))))
 
-(defun line-reminder--delta-list-lines-by-bound (in-list bound delta)
-  "Delta the count of line in the list by bound.
-IN-LIST : input line list.
-BOUND : everything above is affective by delta.
-DELTA : addition/subtraction value of the line count."
+(defun line-reminder--shift-all-lines-list (in-list start delta)
+  "Shift all lines from IN-LIST by from START line with DELTA lines value."
   (let ((index 0))
     (dolist (tmp-linum in-list)
-      (when (< bound tmp-linum)
+      (when (< start tmp-linum)
         (setf (nth index in-list) (+ tmp-linum delta)))
       (setq index (1+ index))))
   in-list)
 
-(defun line-reminder--delta-list-lines-by-bound-once (bound-current-line delta-line-count)
-  "Delta list line by bound once to all type of lines using by this package.
-BOUND-CURRENT-LINE  : Center line number.
-DELTA-LINE-COUNT : Delta line count."
-  ;; Add up delta line count to `change-lines' list.
+(defun line-reminder--shift-all-lines (start delta)
+  "Shift all `change` and `saved` lines by from START line with DELTA lines value."
   (setq line-reminder--change-lines
-        (line-reminder--delta-list-lines-by-bound line-reminder--change-lines
-                                                  bound-current-line
-                                                  delta-line-count))
-  ;; Add up delta line count to `saved-lines' list.
+        (line-reminder--shift-all-lines-list line-reminder--change-lines
+                                             start
+                                             delta))
   (setq line-reminder--saved-lines
-        (line-reminder--delta-list-lines-by-bound line-reminder--saved-lines
-                                                  bound-current-line
-                                                  delta-line-count)))
+        (line-reminder--shift-all-lines-list line-reminder--saved-lines
+                                             start
+                                             delta)))
 
 (defun line-reminder--remove-lines-out-range (in-list)
   "Remove all the line in the list that are above the last/maxinum line \
@@ -378,16 +371,20 @@ IN-LIST : list to be remove or take effect with."
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
       (let ((begin-linum -1) (end-linum -1) (delta-line-count 0)
-            ;; Current line is the bound. Is the line after we do either
-            ;; addition/subtraction.
-            (bound-current-line -1)
-            ;; Is deleting line or adding new line?
-            (is-deleting-line-p nil)
+            (starting-line -1)  ; Starting line for shift
+            (is-deleting-line-p nil)  ; Is deleting line or adding new line?
             (adding-p (< (+ begin length) end))
+            ;; Flag to check if currently commenting or uncommenting.
+            (comm-or-uncomm-p (and (not (= length 0)) (not (= begin end))))
+            ;; Generic variables for `addition` and `deletion`.
             (current-linum -1) (record-last-linum -1) (reach-last-line-in-buffer -1))
+
         (if adding-p
             (setq line-reminder--buffer-point-max (+ line-reminder--buffer-point-max (- end begin)))
           (setq line-reminder--buffer-point-max (- line-reminder--buffer-point-max length)))
+
+        ;; If is comment/uncommenting, always set to true!
+        (when comm-or-uncomm-p (setq adding-p t))
 
         ;; Is deleting line can be depends on the length.
         (when (= begin end) (setq is-deleting-line-p t))
@@ -412,7 +409,7 @@ IN-LIST : list to be remove or take effect with."
           (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
 
         ;; If adding line, bound is the begin line number.
-        (setq bound-current-line begin-linum)
+        (setq starting-line begin-linum)
 
         ;; NOTE: Deletion..
         (unless adding-p
@@ -429,12 +426,13 @@ IN-LIST : list to be remove or take effect with."
             (setq current-linum (line-reminder--line-number-at-pos))
 
             ;; Remove line because we are deleting.
-            (setq line-reminder--change-lines
-                  (remove current-linum line-reminder--change-lines))
-            (setq line-reminder--saved-lines
-                  (remove current-linum line-reminder--saved-lines))
-            (when (equal line-reminder-show-option 'indicators)
-              (line-reminder--ind-remove-indicator-at-line current-linum))
+            (unless comm-or-uncomm-p
+              (setq line-reminder--change-lines
+                    (remove current-linum line-reminder--change-lines))
+              (setq line-reminder--saved-lines
+                    (remove current-linum line-reminder--saved-lines))
+              (when (equal line-reminder-show-option 'indicators)
+                (line-reminder--ind-remove-indicator-at-line current-linum)))
 
             ;; NOTE: Check if we need to terminate this loop?
             (when (or
@@ -447,8 +445,8 @@ IN-LIST : list to be remove or take effect with."
             ;; Update the last linum, make sure it won't do the same line twice.
             (setq record-last-linum current-linum))
 
-          (line-reminder--delta-list-lines-by-bound-once bound-current-line
-                                                         delta-line-count))
+          (unless comm-or-uncomm-p
+            (line-reminder--shift-all-lines starting-line delta-line-count)))
 
         ;; Just add the current line.
         (push begin-linum line-reminder--change-lines)
@@ -457,8 +455,9 @@ IN-LIST : list to be remove or take effect with."
 
         ;; NOTE: Addition..
         (when adding-p
-          (line-reminder--delta-list-lines-by-bound-once bound-current-line
-                                                         delta-line-count)
+          (unless comm-or-uncomm-p
+            (line-reminder--shift-all-lines starting-line delta-line-count))
+
           ;; Adding line. (After adding line/lines, we just need to loop
           ;; throught those lines and add it to `line-reminder--change-lines'
           ;; list.)
