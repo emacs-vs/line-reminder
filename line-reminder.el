@@ -117,9 +117,6 @@
   :type 'list
   :group 'line-reminder)
 
-(defvar-local line-reminder--is-disable-command-p nil
-  "Flag to check if current command the disable command.")
-
 (defvar-local line-reminder--change-lines '()
   "List of line that change in current temp buffer.")
 
@@ -138,11 +135,18 @@
 (defvar-local line-reminder--before-end-linum -1
   "Record down the before end line number.")
 
+(defvar-local line-reminder--buffer-point-max -1
+  "Record down the point max for out of range calculation.")
+
 ;;; Util
+
+(defun line-reminder--line-number-at-pos (&optional pos)
+  "Return line number at POS with absolute as default."
+  (line-number-at-pos pos t))
 
 (defun line-reminder--total-line ()
   "Return current buffer's maxinum line."
-  (line-number-at-pos (point-max)))
+  (line-reminder--line-number-at-pos line-reminder--buffer-point-max))
 
 (defun line-reminder--is-contain-list-string (in-list in-str)
   "Check if a IN-STR contain in any string in the IN-LIST."
@@ -315,8 +319,7 @@ IN-LIST : list to be remove or take effect with."
         (tmp-lst in-list))
     (dolist (line in-list)
       ;; If is larger than last/max line in buffer.
-      (when (or (< last-line-in-buffer line)
-                (<= line 0))
+      (when (or (< last-line-in-buffer line) (<= line 0))
         ;; Remove line because we are deleting.
         (setq tmp-lst (remove line tmp-lst))
         (when (equal line-reminder-show-option 'indicators)
@@ -359,18 +362,21 @@ IN-LIST : list to be remove or take effect with."
 
 (defun line-reminder-before-change-functions (begin end)
   "Do stuff before buffer is changed with BEGIN and END."
-  (setq line-reminder--is-disable-command-p (memq this-command line-reminder-disable-commands))
-  (when (and (not line-reminder--is-disable-command-p)
+  (when (and (not (memq this-command line-reminder-disable-commands))
              (line-reminder--is-valid-line-reminder-situation begin end))
+    (setq line-reminder--buffer-point-max (point-max))
     (setq line-reminder--before-begin-pt begin)
     (setq line-reminder--before-end-pt end)
-    (setq line-reminder--before-begin-linum (line-number-at-pos begin))
-    (setq line-reminder--before-end-linum (line-number-at-pos end))))
+    (setq line-reminder--before-begin-linum (line-reminder--line-number-at-pos begin))
+    (setq line-reminder--before-end-linum (line-reminder--line-number-at-pos end))))
 
 (defun line-reminder-after-change-functions (begin end length)
   "Do stuff after buffer is changed with BEGIN, END and LENGTH."
-  (when (and (not line-reminder--is-disable-command-p)
+  (when (and (not (memq this-command line-reminder-disable-commands))
              (line-reminder--is-valid-line-reminder-situation begin end))
+    (if (= length 0)
+        (setq line-reminder--buffer-point-max (+ line-reminder--buffer-point-max (- end begin)))
+      (setq line-reminder--buffer-point-max (- line-reminder--buffer-point-max length)))
     (save-excursion
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
@@ -383,22 +389,21 @@ IN-LIST : list to be remove or take effect with."
             (is-deleting-line-p nil))
 
         ;; Is deleting line can be depends on the length.
-        (when  (= begin end)
-          (setq is-deleting-line-p t))
+        (when (= begin end) (setq is-deleting-line-p t))
+
         (if is-deleting-line-p
             (progn
               (setq begin line-reminder--before-begin-pt)
               (setq end line-reminder--before-end-pt)
               (setq begin-linum line-reminder--before-begin-linum)
               (setq end-linum line-reminder--before-end-linum))
-          (setq end-linum (line-number-at-pos end))
-          (setq begin-linum (line-number-at-pos begin)))
+          (setq end-linum (line-reminder--line-number-at-pos end))
+          (setq begin-linum (line-reminder--line-number-at-pos begin)))
 
         (goto-char begin)
 
         (setq delta-line-count (- end-linum begin-linum))
-        (when is-deleting-line-p
-          (setq delta-line-count (- 0 delta-line-count)))
+        (when is-deleting-line-p (setq delta-line-count (- 0 delta-line-count)))
 
         ;; Just add the current line.
         (push begin-linum line-reminder--change-lines)
@@ -420,7 +425,7 @@ IN-LIST : list to be remove or take effect with."
                           (not reach-last-line-in-buffer))
                 ;; To do the next line.
                 (forward-line 1)
-                (setq current-linum (line-number-at-pos))
+                (setq current-linum (line-reminder--line-number-at-pos))
 
                 ;; Remove line because we are deleting.
                 (setq line-reminder--change-lines
@@ -465,15 +470,15 @@ IN-LIST : list to be remove or take effect with."
               (while (and (<= current-linum end-linum)
                           ;; Cannot be the same as last line in buffer.
                           (not reach-last-line-in-buffer))
-
                 ;; Push the current line to changes-line.
                 (push current-linum line-reminder--change-lines)
                 (when (equal line-reminder-show-option 'indicators)
                   (line-reminder--mark-line-by-linum current-linum 'line-reminder-modified-sign-face))
 
+
                 ;; To do the next line.
                 (forward-line 1)
-                (setq current-linum (line-number-at-pos))
+                (setq current-linum (line-reminder--line-number-at-pos))
 
                 ;; NOTE: Check if we need to terminate this loop?
                 (when (or
