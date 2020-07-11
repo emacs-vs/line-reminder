@@ -3,14 +3,12 @@
 [![MELPA Stable](https://stable.melpa.org/packages/line-reminder-badge.svg)](https://stable.melpa.org/#/line-reminder)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-
 # line-reminder
 > Line annotation similar to Visual Studio.
 
 | Line Reminder in Emacs Comparison             | Visual Studio Comparison                                 |
 |:---------------------------------------------:|:--------------------------------------------------------:|
-|<img src="./screenshot/emacs-comparison.png"/> | <img src="./screenshot/vs-comparison.png"/>|
-
+|<img src="./etc/emacs-comparison.png"/> | <img src="./etc/vs-comparison.png"/>|
 
 ## Configuration
 
@@ -64,7 +62,6 @@ If you change the fringe location by altering this variable.
 (setq line-indicators-fringe-placed 'left-fringe)
 ```
 
-
 ## Usage
 
 Enable for all buffers.
@@ -75,7 +72,6 @@ Or you can just enable in specific buffer you want.
 ```el
 (line-reminder-mode t)
 ```
-
 
 ## Contribution
 
