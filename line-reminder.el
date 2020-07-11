@@ -319,24 +319,17 @@ END : end changing point."
                                              start
                                              delta)))
 
-(defun line-reminder--remove-lines-out-range (in-list)
+(defun line-reminder--remove-lines-out-range ()
   "Remove all the line in the list that are above the last/maxinum line \
-or less than zero line in current buffer.
-IN-LIST : list to be remove or take effect with."
+or less than zero line in current buffer."
   ;; Remove line that are above last/max line in buffer.
   (let ((last-line-in-buffer (line-reminder--total-line))
-        (tmp-lst in-list))
-    (dolist (line in-list)
+        (check-lst (append line-reminder--change-lines line-reminder--saved-lines)))
+    (dolist (line check-lst)
       ;; If is larger than last/max line in buffer.
       (when (or (< last-line-in-buffer line) (<= line 0))
         ;; Remove line because we are deleting.
-        (line-reminder--remove-line-from-change-line line)))
-    tmp-lst))
-
-(defun line-reminder--remove-lines-out-range-once ()
-  "Do `line-reminder--remove-lines-out-range' to all line list apply to this mode."
-  (setq line-reminder--change-lines (line-reminder--remove-lines-out-range line-reminder--change-lines))
-  (setq line-reminder--saved-lines (line-reminder--remove-lines-out-range line-reminder--saved-lines)))
+        (line-reminder--remove-line-from-change-line line)))))
 
 ;;;###autoload
 (defun line-reminder-transfer-to-saved-lines ()
@@ -348,7 +341,7 @@ IN-LIST : list to be remove or take effect with."
   (setq line-reminder--change-lines '())
 
   (delete-dups line-reminder--saved-lines)  ; Removed save duplicates
-  (line-reminder--remove-lines-out-range-once)  ; Remove out range.
+  (line-reminder--remove-lines-out-range)  ; Remove out range.
 
   (line-reminder--mark-buffer))
 
@@ -500,7 +493,7 @@ IN-LIST : list to be remove or take effect with."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range-once)))))
+        (line-reminder--remove-lines-out-range)))))
 
 ;;; Loading
 
