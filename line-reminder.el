@@ -194,6 +194,12 @@
         (setq ind-managed-absolute-indicators (remove ind ind-managed-absolute-indicators)))
       (remove-overlays start-pt end-pt 'ind-indicator-absolute t))))
 
+(defun line-reminder--add-line-to-change-line (ln)
+  "Add LN to change line list variable."
+  (push ln line-reminder--change-lines)
+  (when (equal line-reminder-show-option 'indicators)
+    (line-reminder--mark-line-by-linum ln 'line-reminder-modified-sign-face)))
+
 (defsubst line-reminder--linum-format-string-align-right ()
   "Return format string align on the right."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
@@ -409,9 +415,7 @@ IN-LIST : list to be remove or take effect with."
           (unless adding-p (setq delta-lines (- 0 delta-lines))))
 
         ;; Just add the current line.
-        (push begin-linum line-reminder--change-lines)
-        (when (equal line-reminder-show-option 'indicators)
-          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
+        (line-reminder--add-line-to-change-line begin-linum)
 
         ;; If adding line, bound is the begin line number.
         (setq starting-line begin-linum)
@@ -431,7 +435,8 @@ IN-LIST : list to be remove or take effect with."
             (setq current-linum (line-reminder--line-number-at-pos))
 
             ;; Remove line because we are deleting.
-            (unless comm-or-uncomm-p
+            (if comm-or-uncomm-p
+                (line-reminder--add-line-to-change-line current-linum)
               (setq line-reminder--change-lines
                     (remove current-linum line-reminder--change-lines))
               (setq line-reminder--saved-lines
@@ -453,9 +458,7 @@ IN-LIST : list to be remove or take effect with."
           (line-reminder--shift-all-lines starting-line delta-lines))
 
         ;; Just add the current line.
-        (push begin-linum line-reminder--change-lines)
-        (when (equal line-reminder-show-option 'indicators)
-          (line-reminder--mark-line-by-linum begin-linum 'line-reminder-modified-sign-face))
+        (line-reminder--add-line-to-change-line begin-linum)
 
         ;; NOTE: Addition..
         (when adding-p
@@ -475,9 +478,7 @@ IN-LIST : list to be remove or take effect with."
                       ;; Cannot be the same as last line in buffer.
                       (not reach-last-line-in-buffer))
             ;; Push the current line to changes-line.
-            (push current-linum line-reminder--change-lines)
-            (when (equal line-reminder-show-option 'indicators)
-              (line-reminder--mark-line-by-linum current-linum 'line-reminder-modified-sign-face))
+            (line-reminder--add-line-to-change-line current-linum)
 
             ;; To do the next line.
             (forward-line 1)
