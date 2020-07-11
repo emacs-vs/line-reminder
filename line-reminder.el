@@ -200,6 +200,13 @@
   (when (equal line-reminder-show-option 'indicators)
     (line-reminder--mark-line-by-linum ln 'line-reminder-modified-sign-face)))
 
+(defun line-reminder--remove-line-from-change-line (ln)
+  "Remove LN from all line lists variable."
+  (setq line-reminder--change-lines (remove ln line-reminder--change-lines))
+  (setq line-reminder--saved-lines (remove ln line-reminder--saved-lines))
+  (when (equal line-reminder-show-option 'indicators)
+    (line-reminder--ind-remove-indicator-at-line ln)))
+
 (defsubst line-reminder--linum-format-string-align-right ()
   "Return format string align on the right."
   (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
@@ -323,9 +330,7 @@ IN-LIST : list to be remove or take effect with."
       ;; If is larger than last/max line in buffer.
       (when (or (< last-line-in-buffer line) (<= line 0))
         ;; Remove line because we are deleting.
-        (setq tmp-lst (remove line tmp-lst))
-        (when (equal line-reminder-show-option 'indicators)
-          (line-reminder--ind-remove-indicator-at-line line))))
+        (line-reminder--remove-line-from-change-line line)))
     tmp-lst))
 
 (defun line-reminder--remove-lines-out-range-once ()
@@ -437,12 +442,7 @@ IN-LIST : list to be remove or take effect with."
             ;; Remove line because we are deleting.
             (if comm-or-uncomm-p
                 (line-reminder--add-line-to-change-line current-linum)
-              (setq line-reminder--change-lines
-                    (remove current-linum line-reminder--change-lines))
-              (setq line-reminder--saved-lines
-                    (remove current-linum line-reminder--saved-lines))
-              (when (equal line-reminder-show-option 'indicators)
-                (line-reminder--ind-remove-indicator-at-line current-linum)))
+              (line-reminder--remove-line-from-change-line current-linum))
 
             ;; NOTE: Check if we need to terminate this loop?
             (when (or
