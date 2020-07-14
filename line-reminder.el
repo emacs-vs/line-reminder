@@ -155,6 +155,12 @@
   "Check if a IN-STR contain in any string in the IN-LIST."
   (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 
+(defun line-reminder--is-contain-list-integer (in-list in-int)
+  "Check if a integer contain in any string in the string list.
+IN-LIST : list of integer use to check if IN-INT in contain one of the integer.
+IN-INT : integer using to check if is contain one of the IN-LIST."
+  (cl-some #'(lambda (lb-sub-int) (= lb-sub-int in-int)) in-list))
+
 (defun line-reminder--mark-line-by-linum (ln fc)
   "Mark the line LN by using face name FC."
   (let ((inhibit-message t) (message-log-max nil))
@@ -240,12 +246,6 @@ LN : Pass is line number for normal sign."
                (line-reminder--get-propertized-normal-sign ln)))
     ('modified (line-reminder--get-propertized-modified-sign))
     ('saved (line-reminder--get-propertized-saved-sign))))
-
-(defun line-reminder--is-contain-list-integer (in-list in-int)
-  "Check if a integer contain in any string in the string list.
-IN-LIST : list of integer use to check if IN-INT in contain one of the integer.
-IN-INT : integer using to check if is contain one of the IN-LIST."
-  (cl-some #'(lambda (lb-sub-int) (= lb-sub-int in-int)) in-list))
 
 (defun line-reminder--linum-format (ln)
   "Core line reminder format string logic here.
