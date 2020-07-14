@@ -188,13 +188,12 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 (defun line-reminder--ind-delete-dups ()
   "Remove duplicates for indicators overlay once."
   (delete-dups ind-managed-absolute-indicators)
-  (let ((record-lst '()) (new-lst '()) (pos -1))
+  (let ((record-lst '()) (pos -1))
     (dolist (ind ind-managed-absolute-indicators)
       (setq pos (car ind))
-      (unless (line-reminder--is-contain-list-integer record-lst pos)
-        (push pos record-lst)
-        (push ind new-lst)))
-    (setq ind-managed-absolute-indicators new-lst)))
+      (if (line-reminder--is-contain-list-integer record-lst pos)
+          (remove-overlays pos pos 'ind-indicator-absolute t)
+        (push pos record-lst)))))
 
 (defun line-reminder--ind-remove-indicator (pos)
   "Remove the indicator to position POS."
@@ -496,15 +495,16 @@ or less than zero line in current buffer."
                    (= current-linum (line-reminder--total-line)))
               (setq reach-last-line-in-buffer t))
 
-            ;; Update the last linum, make sure it won't do the same
-            ;; line twice.
+            ;; Update the last linum, make sure it won't do the same line twice.
             (setq record-last-linum current-linum)))
 
         (delete-dups line-reminder--change-lines)
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range)))))
+        (line-reminder--remove-lines-out-range)
+
+        (line-reminder--ind-delete-dups)))))
 
 ;;; Loading
 
