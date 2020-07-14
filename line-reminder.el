@@ -187,23 +187,24 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 
 (defun line-reminder--ind-delete-dups ()
   "Remove duplicates for indicators overlay once."
-  (delete-dups ind-managed-absolute-indicators)
-  (let ((record-lst '()) (pos -1))
+  (let ((record-lst '()) (new-lst '()) (mkr nil) (mkr-pos -1))
     (dolist (ind ind-managed-absolute-indicators)
-      (setq pos (car ind))
-      (if (line-reminder--is-contain-list-integer record-lst pos)
-          (remove-overlays pos pos 'ind-indicator-absolute t)
-        (push pos record-lst)))))
+      (setq mkr (car ind))
+      (setq mkr-pos (marker-position mkr))
+      (if (line-reminder--is-contain-list-integer record-lst mkr-pos)
+          (remove-overlays mkr-pos mkr-pos 'ind-indicator-absolute t)
+        (push mkr-pos record-lst)
+        (push ind new-lst)))
+    (setq ind-managed-absolute-indicators new-lst)))
 
 (defun line-reminder--ind-remove-indicator (pos)
   "Remove the indicator to position POS."
   (save-excursion
     (goto-char pos)
-    (line-reminder--ind-delete-dups)
     (let ((start-pt (1+ (line-beginning-position))) (end-pt (line-end-position))
           (remove-inds '()))
       (dolist (ind ind-managed-absolute-indicators)
-        (let* ((pos (car ind)) (mkr-pos (marker-position pos)))
+        (let* ((mkr (car ind)) (mkr-pos (marker-position mkr)))
           (when (and (>= mkr-pos start-pt) (<= mkr-pos end-pt))
             (push ind remove-inds))))
       (dolist (ind remove-inds)
@@ -374,6 +375,7 @@ or less than zero line in current buffer."
   "Do stuff before buffer is changed with BEGIN and END."
   (when (and (not (memq this-command line-reminder-disable-commands))
              (line-reminder--is-valid-line-reminder-situation begin end))
+    (line-reminder--ind-delete-dups)
     (progn
       (setq line-reminder--before-max-pt (point-max))
       (setq line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max))))
@@ -502,9 +504,7 @@ or less than zero line in current buffer."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range)
-
-        (line-reminder--ind-delete-dups)))))
+        (line-reminder--remove-lines-out-range)))))
 
 ;;; Loading
 
