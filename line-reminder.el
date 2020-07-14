@@ -185,11 +185,22 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
     (forward-line (1- line))
     (line-reminder--ind-remove-indicator (point))))
 
+(defun line-reminder--ind-delete-dups ()
+  "Remove duplicates for indicators overlay once."
+  (delete-dups ind-managed-absolute-indicators)
+  (let ((record-lst '()) (new-lst '()) (pos -1))
+    (dolist (ind ind-managed-absolute-indicators)
+      (setq pos (car ind))
+      (unless (line-reminder--is-contain-list-integer record-lst pos)
+        (push pos record-lst)
+        (push ind new-lst)))
+    (setq ind-managed-absolute-indicators new-lst)))
+
 (defun line-reminder--ind-remove-indicator (pos)
   "Remove the indicator to position POS."
   (save-excursion
     (goto-char pos)
-    (delete-dups ind-managed-absolute-indicators)
+    (line-reminder--ind-delete-dups)
     (let ((start-pt (1+ (line-beginning-position))) (end-pt (line-end-position))
           (remove-inds '()))
       (dolist (ind ind-managed-absolute-indicators)
