@@ -187,15 +187,16 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 
 (defun line-reminder--ind-delete-dups ()
   "Remove duplicates for indicators overlay once."
-  (let ((record-lst '()) (new-lst '()) (mkr nil) (mkr-pos -1))
-    (dolist (ind ind-managed-absolute-indicators)
-      (setq mkr (car ind))
-      (setq mkr-pos (marker-position mkr))
-      (if (line-reminder--is-contain-list-integer record-lst mkr-pos)
-          (remove-overlays mkr-pos mkr-pos 'ind-indicator-absolute t)
-        (push mkr-pos record-lst)
-        (push ind new-lst)))
-    (setq ind-managed-absolute-indicators new-lst)))
+  (when (equal line-reminder-show-option 'indicators)
+    (let ((record-lst '()) (new-lst '()) (mkr nil) (mkr-pos -1))
+      (dolist (ind ind-managed-absolute-indicators)
+        (setq mkr (car ind))
+        (setq mkr-pos (marker-position mkr))
+        (if (line-reminder--is-contain-list-integer record-lst mkr-pos)
+            (remove-overlays mkr-pos mkr-pos 'ind-indicator-absolute t)
+          (push mkr-pos record-lst)
+          (push ind new-lst)))
+      (setq ind-managed-absolute-indicators new-lst))))
 
 (defun line-reminder--ind-remove-indicator (pos)
   "Remove the indicator to position POS."
