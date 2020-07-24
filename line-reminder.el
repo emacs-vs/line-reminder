@@ -334,7 +334,6 @@ END : end changing point."
 (defun line-reminder--remove-lines-out-range ()
   "Remove all the line in the list that are above the last/maxinum line \
 or less than zero line in current buffer."
-  ;; Remove line that are above last/max line in buffer.
   (let ((last-line-in-buffer (line-reminder--total-line))
         (check-lst (append line-reminder--change-lines line-reminder--saved-lines)))
     (dolist (line check-lst)
@@ -342,6 +341,24 @@ or less than zero line in current buffer."
       (when (or (< last-line-in-buffer line) (<= line 0))
         ;; Remove line because we are deleting.
         (line-reminder--remove-line-from-change-line line)))))
+
+(defun line-reminder--remove-lines (beg end comm-or-uncomm-p)
+  "Remove lines from BEG to END depends on COMM-OR-UNCOMM-P."
+  (let ((cur beg))
+    ;; Shift one more line when commenting/uncommenting.
+    (when comm-or-uncomm-p (setq end (1+ end)))
+    (while (< cur end)
+      (if comm-or-uncomm-p
+          (line-reminder--add-line-to-change-line cur)
+        (line-reminder--remove-line-from-change-line cur))
+      (setq cur (1+ cur)))))
+
+(defun line-reminder--add-lines (beg end)
+  "Add lines from BEG to END."
+  (let ((cur beg))
+    (while (<= cur end)
+      (line-reminder--add-line-to-change-line cur)
+      (setq cur (1+ cur)))))
 
 ;;;###autoload
 (defun line-reminder-transfer-to-saved-lines ()
@@ -399,10 +416,7 @@ or less than zero line in current buffer."
             (max-ln -1)
             (adding-p (< (+ begin length) end))
             ;; Flag to check if currently commenting or uncommenting.
-            (comm-or-uncomm-p (and (not (= length 0)) (not (= begin end))))
-            ;; Generic variables for `addition` and `deletion`.
-            (current-linum -1) (record-last-linum -1) (reach-last-line-in-buffer -1))
-
+            (comm-or-uncomm-p (and (not (= length 0)) (not (= begin end)))))
         (if (or adding-p comm-or-uncomm-p)
             (setq line-reminder--before-max-pt (+ line-reminder--before-max-pt (- end begin)))
           (setq line-reminder--before-max-pt (- line-reminder--before-max-pt length)))
@@ -433,34 +447,7 @@ or less than zero line in current buffer."
 
         ;; NOTE: Deletion..
         (unless adding-p
-          (progn
-            (setq current-linum begin-linum)
-            (setq record-last-linum begin-linum)
-            (setq reach-last-line-in-buffer nil))
-
-          (while (and (< current-linum end-linum)
-                      ;; Cannot be the same as last line in buffer.
-                      (not reach-last-line-in-buffer))
-            ;; To do the next line.
-            (forward-line 1)
-            (setq current-linum (line-reminder--line-number-at-pos))
-
-            ;; Remove line because we are deleting.
-            (if comm-or-uncomm-p
-                (line-reminder--add-line-to-change-line current-linum)
-              (line-reminder--remove-line-from-change-line current-linum))
-
-            ;; NOTE: Check if we need to terminate this loop?
-            (when (or
-                   ;; Check if still the same as last line.
-                   (= current-linum record-last-linum)
-                   ;; Check if current linum last line in buffer
-                   (= current-linum (line-reminder--total-line)))
-              (setq reach-last-line-in-buffer t))
-
-            ;; Update the last linum, make sure it won't do the same line twice.
-            (setq record-last-linum current-linum))
-
+          (line-reminder--remove-lines begin-linum end-linum comm-or-uncomm-p)
           (line-reminder--shift-all-lines starting-line delta-lines))
 
         ;; Just add the current line.
@@ -469,37 +456,7 @@ or less than zero line in current buffer."
         ;; NOTE: Addition..
         (when adding-p
           (line-reminder--shift-all-lines starting-line delta-lines)
-
-          ;; Adding line. (After adding line/lines, we just need to loop
-          ;; throught those lines and add it to `line-reminder--change-lines'
-          ;; list.)
-          (progn
-            (setq current-linum begin-linum)
-            ;; Record down the last current line number, to make sure that
-            ;; we don't fall into infinite loop.
-            (setq record-last-linum begin-linum)
-            (setq reach-last-line-in-buffer nil))
-
-          (while (and (<= current-linum end-linum)
-                      ;; Cannot be the same as last line in buffer.
-                      (not reach-last-line-in-buffer))
-            ;; Push the current line to changes-line.
-            (line-reminder--add-line-to-change-line current-linum)
-
-            ;; To do the next line.
-            (forward-line 1)
-            (setq current-linum (line-reminder--line-number-at-pos))
-
-            ;; NOTE: Check if we need to terminate this loop?
-            (when (or
-                   ;; Check if still the same as last line.
-                   (= current-linum record-last-linum)
-                   ;; Check if current linum last line in buffer
-                   (= current-linum (line-reminder--total-line)))
-              (setq reach-last-line-in-buffer t))
-
-            ;; Update the last linum, make sure it won't do the same line twice.
-            (setq record-last-linum current-linum)))
+          (line-reminder--add-lines begin-linum end-linum))
 
         (delete-dups line-reminder--change-lines)
         (delete-dups line-reminder--saved-lines)
