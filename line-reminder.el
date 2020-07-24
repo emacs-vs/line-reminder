@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation line number linum reminder
-;; Version: 0.3.9
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/line-reminder
 
