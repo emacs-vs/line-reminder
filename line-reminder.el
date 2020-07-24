@@ -8,7 +8,7 @@
 ;; Keyword: annotation line number linum reminder
 ;; Version: 0.3.9
 ;; Package-Requires: ((emacs "24.4"))
-;; URL: https://github.com/jcs090218/line-reminder
+;; URL: https://github.com/jcs-elpa/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -38,7 +38,7 @@
   "Visual Studio like line annotation in Emacs."
   :prefix "line-reminder-"
   :group 'tool
-  :link '(url-link :tag "Repository" "https://github.com/jcs090218/line-reminder"))
+  :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/line-reminder"))
 
 (defcustom line-reminder-show-option 'linum
   "Option to show indicators in buffer."
