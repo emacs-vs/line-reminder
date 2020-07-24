@@ -509,7 +509,7 @@ or less than zero line in current buffer."
 
 ;;; Loading
 
-(defun line-reminder-enable ()
+(defun line-reminder--enable ()
   "Enable `line-reminder' in current buffer."
   (cl-case line-reminder-show-option
     ('linum
@@ -521,7 +521,7 @@ or less than zero line in current buffer."
   (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
   (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
 
-(defun line-reminder-disable ()
+(defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder-before-change-functions t)
   (remove-hook 'after-change-functions #'line-reminder-after-change-functions t)
@@ -533,7 +533,7 @@ or less than zero line in current buffer."
   "Minor mode 'line-reminder-mode'."
   :lighter " LR"
   :group line-reminder
-  (if line-reminder-mode (line-reminder-enable) (line-reminder-disable)))
+  (if line-reminder-mode (line-reminder--enable) (line-reminder--disable)))
 
 (defun line-reminder-turn-on-line-reminder-mode ()
   "Turn on the 'line-reminder-mode'."
