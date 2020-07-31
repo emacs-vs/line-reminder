@@ -7,7 +7,7 @@
 ;; Description: Line annotation similar to Visual Studio.
 ;; Keyword: annotation line number linum reminder
 ;; Version: 0.4.0
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ((emacs "24.4") (indicators "0.0.4"))
 ;; URL: https://github.com/jcs-elpa/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
