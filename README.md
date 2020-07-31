@@ -42,17 +42,13 @@ to `"▐"`.
 * `line-reminder-modified-sign`
 * `line-reminder-saved-sign`
 
-Customize string on the right/left side of the line number.
+Customize format for how line annotation is displayed.
 
 ```el
-(setq line-reminder-linum-left-string "")
-(setq line-reminder-linum-right-string " ")
+(setq line-reminder-linum-format "%s ")
 ```
 
 ### Using `indicators` (Recommended)
-
-*If you wish to use indicators to display annotation, make sure you install
-[indicators](https://github.com/Fuco1/indicators.el) package.*
 
 Customize the symbol of the fringe
 
