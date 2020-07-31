@@ -12,48 +12,35 @@
 
 ## Usage
 
-Buffer Name List that you do not want this mode to take effect.
+Enable for all buffers.
 
 ```el
-(setq line-reminder-ignore-buffer-names '("*Backtrace*"
-                                          "*Buffer List*"
-                                          "*Checkdoc Status*"
-                                          "*Echo Area"
-                                          "*helm"
-                                          "*Help*"
-                                          "magit"
-                                          "*Minibuf-"
-                                          "*Packages*"
-                                          "*run*"
-                                          "*shell*"
-                                          "*undo-tree*"))
+(global-line-reminder-mode t)
 ```
 
-List of face you can customize.
-
-* `line-reminder-modified-sign-face`
-* `line-reminder-saved-sign-face`
-
-### Using linum
-
-If you wish to use `linum` to show annotations; set the `line-reminder-show-option`
-variable to `'linum` like the following into your configuration.
+Or you can just enable in specific buffer you want.
 
 ```el
-(setq line-reminder-show-option 'linum)
+(line-reminder-mode t)
 ```
 
-Customize the modified sign.
+### Display Annotation
+
+You can either set `line-reminder-show-option` to `linum` or `indicators`
+like the following snippet below.
 
 ```el
-(setq line-reminder-modified-sign "▐")
+(setq line-reminder-show-option 'linum)  ; Or set to 'indicators
 ```
 
-Customize the saved sign.
+### Using linum (Not recommended)
 
-```el
-(setq line-reminder-saved-sign "▐")
-```
+`linum` uses text to display annotation, you can customize the two variables
+below to change the display symbol. The default value for both variables is set
+to `"▐"`.
+
+* `line-reminder-modified-sign`
+* `line-reminder-saved-sign`
 
 Customize string on the right/left side of the line number.
 
@@ -62,15 +49,10 @@ Customize string on the right/left side of the line number.
 (setq line-reminder-linum-right-string " ")
 ```
 
-### Using indicators
+### Using indicators (Recommended)
 
-If you wish to use `indicators` to show annotations; set the `line-reminder-show-option`
-variable to `'indicators` like the following into your configuration.
-
-```el
-(setq line-reminder-show-option 'indicators)
-```
-
+*If you wish to use indicators to display annotation, make sure you install
+[indicators](https://github.com/Fuco1/indicators.el) package.*
 
 Customize the symbol of the fringe
 
@@ -84,19 +66,12 @@ If you change the fringe location by altering this variable.
 (setq line-indicators-fringe-placed 'left-fringe)
 ```
 
-## Usage
+### Face
 
-Enable for all buffers.
+List of face you can customize.
 
-```el
-(global-line-reminder-mode t)
-```
-
-Or you can just enable in specific buffer you want.
-
-```el
-(line-reminder-mode t)
-```
+* `line-reminder-modified-sign-face`
+* `line-reminder-saved-sign-face`
 
 ## Contribution
 
