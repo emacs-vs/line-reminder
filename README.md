@@ -33,7 +33,7 @@ like the following snippet below.
 (setq line-reminder-show-option 'linum)  ; Or set to 'indicators
 ```
 
-### Using linum (Not recommended)
+### Using `linum` (Not recommended)
 
 `linum` uses text to display annotation, you can customize the two variables
 below to change the display symbol. The default value for both variables is set
@@ -49,7 +49,7 @@ Customize string on the right/left side of the line number.
 (setq line-reminder-linum-right-string " ")
 ```
 
-### Using indicators (Recommended)
+### Using `indicators` (Recommended)
 
 *If you wish to use indicators to display annotation, make sure you install
 [indicators](https://github.com/Fuco1/indicators.el) package.*
