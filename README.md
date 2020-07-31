@@ -36,7 +36,12 @@ List of face you can customize.
 
 ### Using linum
 
-When you set `line-reminder-show-option` variable to `'linum`.
+If you wish to use `linum` to show annotations; set the `line-reminder-show-option`
+variable to `'linum` like the following into your configuration.
+
+```el
+(setq line-reminder-show-option 'linum)
+```
 
 Customize the modified sign.
 
@@ -59,7 +64,13 @@ Customize string on the right/left side of the line number.
 
 ### Using indicators
 
-When you set `line-reminder-show-option` variable to `'indicators`.
+If you wish to use `indicators` to show annotations; set the `line-reminder-show-option`
+variable to `'indicators` like the following into your configuration.
+
+```el
+(setq line-reminder-show-option 'indicators)
+```
+
 
 Customize the symbol of the fringe
 
