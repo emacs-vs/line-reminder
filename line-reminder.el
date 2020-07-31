@@ -66,13 +66,8 @@
   :type 'integer
   :group 'line-reminder)
 
-(defcustom line-reminder-linum-left-string ""
-  "String on the left side of the line number."
-  :type 'string
-  :group 'line-reminder)
-
-(defcustom line-reminder-linum-right-string " "
-  "String on the right side of the line number."
+(defcustom line-reminder-linum-format "%s "
+  "Format to display annotation using `linum`."
   :type 'string
   :group 'line-reminder)
 
@@ -233,9 +228,8 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 (defsubst line-reminder--get-propertized-normal-sign (ln)
   "Return a default propertized normal sign.
 LN : pass in by `linum-format' variable."
-  (propertize (format (concat line-reminder-linum-left-string
-                              (line-reminder--linum-format-string-align-right)
-                              line-reminder-linum-right-string)
+  (propertize (format (format line-reminder-linum-format
+                              (line-reminder--linum-format-string-align-right))
                       ln)
               'face 'linum))
 
