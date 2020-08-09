@@ -5,8 +5,8 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Line annotation for changed and saved lines.
-;; Keyword: annotation line number linum reminder
-;; Version: 0.4.1
+;; Keyword: annotation line number linum reminder highlight display
+;; Version: 0.4.2
 ;; Package-Requires: ((emacs "24.4") (indicators "0.0.4"))
 ;; URL: https://github.com/jcs-elpa/line-reminder
 
