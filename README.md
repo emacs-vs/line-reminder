@@ -33,7 +33,7 @@ like the following snippet below.
 (setq line-reminder-show-option 'linum)  ; Or set to 'indicators
 ```
 
-### Using `linum` (Not recommended)
+### Using `linum`
 
 `linum` uses text to display annotation, you can customize the two variables
 below to change the display symbol. The default value for both variables is set
@@ -48,7 +48,7 @@ Customize format for how line annotation is displayed.
 (setq line-reminder-linum-format "%s ")
 ```
 
-### Using `indicators` (Recommended)
+### Using `indicators`
 
 Customize the symbol of the fringe
 
