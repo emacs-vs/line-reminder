@@ -1,10 +1,10 @@
-;;; line-reminder.el --- Line annotation similar to Visual Studio  -*- lexical-binding: t; -*-
+;;; line-reminder.el --- Line annotation for changed and saved lines  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Shen, Jen-Chieh
 ;; Created date 2018-05-25 15:10:29
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Line annotation similar to Visual Studio.
+;; Description: Line annotation for changed and saved lines.
 ;; Keyword: annotation line number linum reminder
 ;; Version: 0.4.1
 ;; Package-Requires: ((emacs "24.4") (indicators "0.0.4"))
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 ;;
-;; Line annotation similar to Visual Studio.
+;; Line annotation for changed and saved lines.
 ;;
 
 ;;; Code:
@@ -35,7 +35,7 @@
 (require 'cl-lib)
 
 (defgroup line-reminder nil
-  "Visual Studio like line annotation in Emacs."
+  "Line annotation for changed and saved lines."
   :prefix "line-reminder-"
   :group 'tool
   :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/line-reminder"))
@@ -383,7 +383,7 @@ or less than zero line in current buffer."
       (dolist (ln line-reminder--saved-lines)
         (line-reminder--mark-line-by-linum ln 'line-reminder-saved-sign-face)))))
 
-(defun line-reminder-before-change-functions (begin end)
+(defun line-reminder--before-change-functions (begin end)
   "Do stuff before buffer is changed with BEGIN and END."
   (when (and (not (memq this-command line-reminder-disable-commands))
              (line-reminder--is-valid-line-reminder-situation begin end))
@@ -398,7 +398,7 @@ or less than zero line in current buffer."
       (setq line-reminder--before-end-pt end)
       (setq line-reminder--before-end-linum (line-reminder--line-number-at-pos end)))))
 
-(defun line-reminder-after-change-functions (begin end length)
+(defun line-reminder--after-change-functions (begin end length)
   "Do stuff after buffer is changed with BEGIN, END and LENGTH."
   (when (and (not (memq this-command line-reminder-disable-commands))
              (line-reminder--is-valid-line-reminder-situation begin end))
@@ -468,14 +468,14 @@ or less than zero line in current buffer."
      (setq-local linum-format 'line-reminder--linum-format))
     ('indicators
      (require 'indicators)))
-  (add-hook 'before-change-functions #'line-reminder-before-change-functions nil t)
-  (add-hook 'after-change-functions #'line-reminder-after-change-functions nil t)
+  (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
+  (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
   (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
-  (remove-hook 'before-change-functions #'line-reminder-before-change-functions t)
-  (remove-hook 'after-change-functions #'line-reminder-after-change-functions t)
+  (remove-hook 'before-change-functions #'line-reminder--before-change-functions t)
+  (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
   (advice-remove 'save-buffer #'line-reminder-transfer-to-saved-lines)
   (line-reminder-clear-reminder-lines-sign))
 

@@ -4,7 +4,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 # line-reminder
-> Line annotation similar to Visual Studio.
+> Line annotation for changed and saved lines.
 
 | Line Reminder in Emacs Comparison      | Visual Studio Comparison            |
 |:--------------------------------------:|:-----------------------------------:|
