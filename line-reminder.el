@@ -486,13 +486,13 @@ or less than zero line in current buffer."
   :group line-reminder
   (if line-reminder-mode (line-reminder--enable) (line-reminder--disable)))
 
-(defun line-reminder-turn-on-line-reminder-mode ()
+(defun line-reminder--turn-on-line-reminder-mode ()
   "Turn on the 'line-reminder-mode'."
   (line-reminder-mode 1))
 
 ;;;###autoload
 (define-globalized-minor-mode global-line-reminder-mode
-  line-reminder-mode line-reminder-turn-on-line-reminder-mode
+  line-reminder-mode line-reminder--turn-on-line-reminder-mode
   :require 'line-reminder)
 
 (provide 'line-reminder)
