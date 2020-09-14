@@ -91,18 +91,19 @@
   :type 'symbol
   :group 'line-reminder)
 
-(defcustom line-reminder-ignore-buffer-names '("*Backtrace*"
-                                               "*Buffer List*"
-                                               "*Checkdoc Status*"
-                                               "*Echo Area"
-                                               "*helm"
-                                               "*Help*"
-                                               "magit"
-                                               "*Minibuf-"
-                                               "*Packages*"
-                                               "*run*"
-                                               "*shell*"
-                                               "*undo-tree*")
+(defcustom line-reminder-ignore-buffer-names
+  '("*Backtrace*"
+    "*Buffer List*"
+    "*Checkdoc Status*"
+    "*Echo Area"
+    "*helm"
+    "*Help*"
+    "magit"
+    "*Minibuf-"
+    "*Packages*"
+    "*run*"
+    "*shell*"
+    "*undo-tree*")
   "Buffer Name list you want to ignore this mode."
   :type 'list
   :group 'line-reminder)
@@ -137,6 +138,10 @@
   "Record down the before end line number.")
 
 ;;; Util
+
+(defun line-reminder--use-indicators-p ()
+  "Return non-nil if using indicator, else return nil."
+  (equal line-reminder-show-option 'indicators))
 
 (defun line-reminder--line-number-at-pos (&optional pos)
   "Return line number at POS with absolute as default."
@@ -182,7 +187,7 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 
 (defun line-reminder--ind-delete-dups ()
   "Remove duplicates for indicators overlay once."
-  (when (equal line-reminder-show-option 'indicators)
+  (when (line-reminder--use-indicators-p)
     (let ((record-lst '()) (new-lst '()) (mkr nil) (mkr-pos -1))
       (dolist (ind ind-managed-absolute-indicators)
         (setq mkr (car ind))
@@ -210,14 +215,14 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
 (defun line-reminder--add-line-to-change-line (ln)
   "Add LN to change line list variable."
   (push ln line-reminder--change-lines)
-  (when (equal line-reminder-show-option 'indicators)
+  (when (line-reminder--use-indicators-p)
     (line-reminder--mark-line-by-linum ln 'line-reminder-modified-sign-face)))
 
 (defun line-reminder--remove-line-from-change-line (ln)
   "Remove LN from all line lists variable."
   (setq line-reminder--change-lines (remove ln line-reminder--change-lines))
   (setq line-reminder--saved-lines (remove ln line-reminder--saved-lines))
-  (when (equal line-reminder-show-option 'indicators)
+  (when (line-reminder--use-indicators-p)
     (line-reminder--ind-remove-indicator-at-line ln)))
 
 (defsubst line-reminder--linum-format-string-align-right ()
@@ -291,15 +296,15 @@ LN : pass in by `linum-format' variable."
   (setq line-reminder--saved-lines '())
   (line-reminder--ind-clear-indicators-absolute))
 
-(defun line-reminder--is-valid-line-reminder-situation (&optional begin end)
+(defun line-reminder--is-valid-line-reminder-situation (&optional beg end)
   "Check if is valid to apply line reminder at the moment.
-BEGIN : start changing point.
+BEG : start changing point.
 END : end changing point."
-  (if (and begin end)
+  (if (and beg end)
       (and (not buffer-read-only)
            (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
                                                        (buffer-name)))
-           (<= begin (point-max))
+           (<= beg (point-max))
            (<= end (point-max)))
     (and (not buffer-read-only)
          (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
@@ -370,12 +375,12 @@ or less than zero line in current buffer."
 
 (defun line-reminder--ind-clear-indicators-absolute ()
   "Clean up all the indicators."
-  (when (equal line-reminder-show-option 'indicators)
+  (when (line-reminder--use-indicators-p)
     (ind-clear-indicators-absolute)))
 
 (defun line-reminder--mark-buffer ()
   "Mark the whole buffer."
-  (when (equal line-reminder-show-option 'indicators)
+  (when (line-reminder--use-indicators-p)
     (save-excursion
       (line-reminder--ind-clear-indicators-absolute)
       (dolist (ln line-reminder--change-lines)
@@ -383,50 +388,50 @@ or less than zero line in current buffer."
       (dolist (ln line-reminder--saved-lines)
         (line-reminder--mark-line-by-linum ln 'line-reminder-saved-sign-face)))))
 
-(defun line-reminder--before-change-functions (begin end)
-  "Do stuff before buffer is changed with BEGIN and END."
+(defun line-reminder--before-change-functions (beg end)
+  "Do stuff before buffer is changed with BEG and END."
   (when (and (not (memq this-command line-reminder-disable-commands))
-             (line-reminder--is-valid-line-reminder-situation begin end))
+             (line-reminder--is-valid-line-reminder-situation beg end))
     (line-reminder--ind-delete-dups)
     (progn
       (setq line-reminder--before-max-pt (point-max))
       (setq line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max))))
     (progn
-      (setq line-reminder--before-begin-pt begin)
-      (setq line-reminder--before-begin-linum (line-reminder--line-number-at-pos begin)))
+      (setq line-reminder--before-begin-pt beg)
+      (setq line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg)))
     (progn
       (setq line-reminder--before-end-pt end)
       (setq line-reminder--before-end-linum (line-reminder--line-number-at-pos end)))))
 
-(defun line-reminder--after-change-functions (begin end length)
-  "Do stuff after buffer is changed with BEGIN, END and LENGTH."
+(defun line-reminder--after-change-functions (beg end len)
+  "Do stuff after buffer is changed with BEG, END and LEN."
   (when (and (not (memq this-command line-reminder-disable-commands))
-             (line-reminder--is-valid-line-reminder-situation begin end))
+             (line-reminder--is-valid-line-reminder-situation beg end))
     (save-excursion
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
       (let ((begin-linum -1) (end-linum -1) (delta-lines 0)
             (starting-line -1)  ; Starting line for shift
             (max-ln -1)
-            (adding-p (< (+ begin length) end))
+            (adding-p (< (+ beg len) end))
             ;; Flag to check if currently commenting or uncommenting.
-            (comm-or-uncomm-p (and (not (= length 0)) (not (= begin end)))))
+            (comm-or-uncomm-p (and (not (= len 0)) (not (= beg end)))))
         (if (or adding-p comm-or-uncomm-p)
-            (setq line-reminder--before-max-pt (+ line-reminder--before-max-pt (- end begin)))
-          (setq line-reminder--before-max-pt (- line-reminder--before-max-pt length)))
+            (setq line-reminder--before-max-pt (+ line-reminder--before-max-pt (- end beg)))
+          (setq line-reminder--before-max-pt (- line-reminder--before-max-pt len)))
 
         (setq max-ln (line-reminder--line-number-at-pos line-reminder--before-max-pt))
 
         (if adding-p
             (progn
               (setq end-linum (line-reminder--line-number-at-pos end))
-              (setq begin-linum (line-reminder--line-number-at-pos begin)))
-          (setq begin line-reminder--before-begin-pt)
+              (setq begin-linum (line-reminder--line-number-at-pos beg)))
+          (setq beg line-reminder--before-begin-pt)
           (setq end line-reminder--before-end-pt)
           (setq begin-linum line-reminder--before-begin-linum)
           (setq end-linum line-reminder--before-end-linum))
 
-        (goto-char begin)
+        (goto-char beg)
 
         (if comm-or-uncomm-p
             (setq delta-lines (- max-ln line-reminder--before-max-linum))
