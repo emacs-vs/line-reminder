@@ -92,18 +92,18 @@
   :group 'line-reminder)
 
 (defcustom line-reminder-ignore-buffer-names
-  '("*Backtrace*"
-    "*Buffer List*"
-    "*Checkdoc Status*"
-    "*Echo Area"
-    "*helm"
-    "*Help*"
-    "magit"
-    "*Minibuf-"
-    "*Packages*"
-    "*run*"
-    "*shell*"
-    "*undo-tree*")
+  '("[*]Backtrace[*]"
+    "[*]Buffer List[*]"
+    "[*]Checkdoc Status[*]"
+    "[*]Echo Area"
+    "[*]helm"
+    "[*]Help[*]"
+    "magit[-]*[[:ascii:]]*[:]"
+    "[*]Minibuf-"
+    "[*]Packages[*]"
+    "[*]run[*]"
+    "[*]shell[*]"
+    "[*]undo-tree[*]")
   "Buffer Name list you want to ignore this mode."
   :type 'list
   :group 'line-reminder)
@@ -151,15 +151,15 @@
   "Return current buffer's maxinum line."
   (line-reminder--line-number-at-pos line-reminder--before-max-pt))
 
-(defun line-reminder--is-contain-list-string (in-list in-str)
-  "Check if a IN-STR contain in any string in the IN-LIST."
-  (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+(defun line-reminder--contain-list-string-regexp (in-list in-str)
+  "Return non-nil if IN-STR is listed in IN-LIST.
 
-(defun line-reminder--is-contain-list-integer (in-list in-int)
-  "Check if a integer contain in any string in the string list.
-IN-LIST : list of integer use to check if IN-INT in contain one of the integer.
-IN-INT : integer using to check if is contain one of the IN-LIST."
-  (cl-some #'(lambda (lb-sub-int) (= lb-sub-int in-int)) in-list))
+This function uses `string-match-p'."
+  (cl-some (lambda (elm) (string-match-p elm in-str)) in-list))
+
+(defun line-reminder--contain-list-integer (in-list in-int)
+  "Return non-nil if IN-INT is listed in IN-LIST."
+  (cl-some (lambda (elm) (= elm in-int)) in-list))
 
 (defun line-reminder--mark-line-by-linum (ln fc)
   "Mark the line LN by using face name FC."
@@ -192,7 +192,7 @@ IN-INT : integer using to check if is contain one of the IN-LIST."
       (dolist (ind ind-managed-absolute-indicators)
         (setq mkr (car ind))
         (setq mkr-pos (marker-position mkr))
-        (if (line-reminder--is-contain-list-integer record-lst mkr-pos)
+        (if (line-reminder--contain-list-integer record-lst mkr-pos)
             (remove-overlays mkr-pos mkr-pos 'ind-indicator-absolute t)
           (push mkr-pos record-lst)
           (push ind new-lst)))
@@ -266,12 +266,12 @@ LN : pass in by `linum-format' variable."
         (is-sign-exists nil))
     (cond
      ;; NOTE: Check if change lines list.
-     ((line-reminder--is-contain-list-integer line-reminder--change-lines ln)
+     ((line-reminder--contain-list-integer line-reminder--change-lines ln)
       (progn
         (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified))
         (setq is-sign-exists t)))
      ;; NOTE: Check if saved lines list.
-     ((line-reminder--is-contain-list-integer line-reminder--saved-lines ln)
+     ((line-reminder--contain-list-integer line-reminder--saved-lines ln)
       (progn
         (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved))
         (setq is-sign-exists t))))
@@ -302,13 +302,13 @@ BEG : start changing point.
 END : end changing point."
   (if (and beg end)
       (and (not buffer-read-only)
-           (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
-                                                       (buffer-name)))
+           (not (line-reminder--contain-list-string-regexp
+                 line-reminder-ignore-buffer-names (buffer-name)))
            (<= beg (point-max))
            (<= end (point-max)))
     (and (not buffer-read-only)
-         (not (line-reminder--is-contain-list-string line-reminder-ignore-buffer-names
-                                                     (buffer-name))))))
+         (not (line-reminder--contain-list-string-regexp
+               line-reminder-ignore-buffer-names (buffer-name))))))
 
 (defun line-reminder--shift-all-lines-list (in-list start delta)
   "Shift all lines from IN-LIST by from START line with DELTA lines value."
