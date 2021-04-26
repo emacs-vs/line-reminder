@@ -7,7 +7,7 @@
 ;; Description: Line annotation for changed and saved lines.
 ;; Keyword: annotation line number linum reminder highlight display
 ;; Version: 0.4.5
-;; Package-Requires: ((emacs "24.4") (indicators "0.0.4"))
+;; Package-Requires: ((emacs "24.4") (indicators "0.0.4") (fringe-helper "1.0.1"))
 ;; URL: https://github.com/jcs-elpa/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
@@ -33,6 +33,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'fringe-helper)
 
 (defgroup line-reminder nil
   "Line annotation for changed and saved lines."
@@ -81,12 +82,36 @@
   :type 'string
   :group 'line-reminder)
 
+(fringe-helper-define 'line-reminder-bitmap nil
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx.."
+  "..xxx..")
+
 (defcustom line-reminder-fringe-placed 'left-fringe
   "Line indicators fringe location."
-  :type 'symbol
+  :type '(choice (const :tag "On the left fringe" left-fringe)
+                 (const :tag "On the right fringe" right-fringe))
   :group 'line-reminder)
 
-(defcustom line-reminder-fringe 'filled-rectangle
+(defcustom line-reminder-fringe 'line-reminder-bitmap
   "Line indicators fringe symbol."
   :type 'symbol
   :group 'line-reminder)
@@ -252,9 +277,9 @@ TYPE : type of the propertize sign you want.
 LN : Pass is line number for normal sign."
   (cl-case type
     (normal (if (not ln)
-                 (error "Normal line but with no line number pass in")
-               ;; Just return normal linum format.
-               (line-reminder--get-propertized-normal-sign ln)))
+                (error "Normal line but with no line number pass in")
+              ;; Just return normal linum format.
+              (line-reminder--get-propertized-normal-sign ln)))
     (modified (line-reminder--get-propertized-modified-sign))
     (saved (line-reminder--get-propertized-saved-sign))))
 
