@@ -173,9 +173,9 @@ This function uses `string-match-p'."
                                   :face fc
                                   :priority
                                   (cl-case fc
-                                    ('line-reminder-modified-sign-face
+                                    (line-reminder-modified-sign-face
                                      line-reminder-modified-sign-priority)
-                                    ('line-reminder-saved-sign-face
+                                    (line-reminder-saved-sign-face
                                      line-reminder-saved-sign-priority)))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
@@ -251,12 +251,12 @@ LN : pass in by `linum-format' variable."
 TYPE : type of the propertize sign you want.
 LN : Pass is line number for normal sign."
   (cl-case type
-    ('normal (if (not ln)
+    (normal (if (not ln)
                  (error "Normal line but with no line number pass in")
                ;; Just return normal linum format.
                (line-reminder--get-propertized-normal-sign ln)))
-    ('modified (line-reminder--get-propertized-modified-sign))
-    ('saved (line-reminder--get-propertized-saved-sign))))
+    (modified (line-reminder--get-propertized-modified-sign))
+    (saved (line-reminder--get-propertized-saved-sign))))
 
 (defun line-reminder--linum-format (ln)
   "Core line reminder format string logic here.
@@ -468,10 +468,10 @@ or less than zero line in current buffer."
 (defun line-reminder--enable ()
   "Enable `line-reminder' in current buffer."
   (cl-case line-reminder-show-option
-    ('linum
+    (linum
      (require 'linum)
      (setq-local linum-format 'line-reminder--linum-format))
-    ('indicators
+    (indicators
      (require 'indicators)))
   (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
