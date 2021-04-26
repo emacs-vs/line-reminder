@@ -102,7 +102,6 @@
   "..xxx.."
   "..xxx.."
   "..xxx.."
-  "..xxx.."
   "..xxx..")
 
 (defcustom line-reminder-fringe-placed 'left-fringe
