@@ -144,6 +144,9 @@
 (defvar-local line-reminder--before-end-linum -1
   "Record down the before end line number.")
 
+(defvar-local line-reminder--undo-cancel-p nil
+  "If non-nil, we should remove record of changes/saved lines for undo actions.")
+
 ;;; Util
 
 (defun line-reminder--use-indicators-p ()
@@ -171,19 +174,15 @@ This function uses `string-match-p'."
 (defun line-reminder--mark-line-by-linum (ln fc)
   "Mark the line LN by using face name FC."
   (let ((inhibit-message t) (message-log-max nil))
-    (ind-create-indicator-at-line ln
-                                  :managed t
-                                  :dynamic t
-                                  :relative nil
-                                  :fringe line-reminder-fringe-placed
-                                  :bitmap line-reminder-fringe
-                                  :face fc
-                                  :priority
-                                  (cl-case fc
-                                    (line-reminder-modified-sign-face
-                                     line-reminder-modified-sign-priority)
-                                    (line-reminder-saved-sign-face
-                                     line-reminder-saved-sign-priority)))))
+    (ind-create-indicator-at-line
+     ln :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
+     :bitmap line-reminder-fringe :face fc
+     :priority
+     (cl-case fc
+       (line-reminder-modified-sign-face
+        line-reminder-modified-sign-priority)
+       (line-reminder-saved-sign-face
+        line-reminder-saved-sign-priority)))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
   "Remove the indicator on LINE."
@@ -378,8 +377,7 @@ or less than zero line in current buffer."
 
 (defun line-reminder--ind-clear-indicators-absolute ()
   "Clean up all the indicators."
-  (when (line-reminder--use-indicators-p)
-    (ind-clear-indicators-absolute)))
+  (when (line-reminder--use-indicators-p) (ind-clear-indicators-absolute)))
 
 (defun line-reminder--mark-buffer ()
   "Mark the whole buffer."
@@ -394,6 +392,7 @@ or less than zero line in current buffer."
 (defun line-reminder--before-change-functions (beg end)
   "Do stuff before buffer is changed with BEG and END."
   (when (line-reminder--is-valid-line-reminder-situation beg end)
+    (setq line-reminder--undo-cancel-p undo-in-progress)
     (line-reminder--ind-delete-dups)
     (setq line-reminder--before-max-pt (point-max)
           line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max)))
@@ -460,6 +459,30 @@ or less than zero line in current buffer."
         ;; Remove out range.
         (line-reminder--remove-lines-out-range)))))
 
+;;; Undo
+
+(defun line-reminder--undo-tree-root-p ()
+  "Return non-nil, if undo is at the root of the undo list."
+  (or (eq buffer-undo-list t)
+      (null (undo-tree-node-previous (undo-tree-current buffer-undo-tree)))))
+
+(defun line-reminder--undo-root-p ()
+  "Compatible version to check root of undo list for different undo packages."
+  (cond
+   ((and (featurep 'undo-tree) undo-tree-mode)
+    (ignore-errors (line-reminder--undo-tree-root-p)))
+   ;; TODO: add default check
+   (t nil)))
+
+(defun line-reminder--post-command ()
+  "Post command for undo cancelling."
+  (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
+    (setq line-reminder--change-lines '()
+          line-reminder--saved-lines '())
+    (line-reminder--ind-clear-indicators-absolute)
+    ;; Reset flag
+    (setq line-reminder--undo-cancel-p nil)))
+
 ;;; Loading
 
 (defun line-reminder--enable ()
@@ -472,12 +495,14 @@ or less than zero line in current buffer."
      (require 'indicators)))
   (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
+  (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   (advice-add 'save-buffer :after #'line-reminder-transfer-to-saved-lines))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder--before-change-functions t)
   (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
+  (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (advice-remove 'save-buffer #'line-reminder-transfer-to-saved-lines)
   (line-reminder-clear-reminder-lines-sign))
 
