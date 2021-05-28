@@ -83,26 +83,9 @@
   :group 'line-reminder)
 
 (fringe-helper-define 'line-reminder-bitmap nil
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx.."
-  "..xxx..")
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx..")
 
 (defcustom line-reminder-fringe-placed 'left-fringe
   "Line indicators fringe location."
@@ -321,18 +304,14 @@ LN : pass in by `linum-format' variable."
   (line-reminder--ind-clear-indicators-absolute))
 
 (defun line-reminder--is-valid-line-reminder-situation (&optional beg end)
-  "Check if is valid to apply line reminder at the moment.
-BEG : start changing point.
-END : end changing point."
-  (if (and beg end)
-      (and (not buffer-read-only)
-           (not (line-reminder--contain-list-string-regexp
-                 line-reminder-ignore-buffer-names (buffer-name)))
-           (<= beg (point-max))
-           (<= end (point-max)))
-    (and (not buffer-read-only)
-         (not (line-reminder--contain-list-string-regexp
-               line-reminder-ignore-buffer-names (buffer-name))))))
+  "Return non-nil, if the conditions are matched.
+
+Arguments BEG and END are passed in by before/after change functions."
+  (and (not buffer-read-only)
+       (not (line-reminder--contain-list-string-regexp
+             line-reminder-ignore-buffer-names (buffer-name)))
+       (not (memq this-command line-reminder-disable-commands))
+       (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
 (defun line-reminder--shift-all-lines-list (in-list start delta)
   "Shift all lines from IN-LIST by from START line with DELTA lines value."
@@ -414,23 +393,18 @@ or less than zero line in current buffer."
 
 (defun line-reminder--before-change-functions (beg end)
   "Do stuff before buffer is changed with BEG and END."
-  (when (and (not (memq this-command line-reminder-disable-commands))
-             (line-reminder--is-valid-line-reminder-situation beg end))
+  (when (line-reminder--is-valid-line-reminder-situation beg end)
     (line-reminder--ind-delete-dups)
-    (progn
-      (setq line-reminder--before-max-pt (point-max))
-      (setq line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max))))
-    (progn
-      (setq line-reminder--before-begin-pt beg)
-      (setq line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg)))
-    (progn
-      (setq line-reminder--before-end-pt end)
-      (setq line-reminder--before-end-linum (line-reminder--line-number-at-pos end)))))
+    (setq line-reminder--before-max-pt (point-max)
+          line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max)))
+    (setq line-reminder--before-begin-pt beg
+          line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg))
+    (setq line-reminder--before-end-pt end
+          line-reminder--before-end-linum (line-reminder--line-number-at-pos end))))
 
 (defun line-reminder--after-change-functions (beg end len)
   "Do stuff after buffer is changed with BEG, END and LEN."
-  (when (and (not (memq this-command line-reminder-disable-commands))
-             (line-reminder--is-valid-line-reminder-situation beg end))
+  (when (line-reminder--is-valid-line-reminder-situation beg end)
     (save-excursion
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
@@ -447,13 +421,12 @@ or less than zero line in current buffer."
         (setq max-ln (line-reminder--line-number-at-pos line-reminder--before-max-pt))
 
         (if adding-p
-            (progn
-              (setq end-linum (line-reminder--line-number-at-pos end))
-              (setq begin-linum (line-reminder--line-number-at-pos beg)))
-          (setq beg line-reminder--before-begin-pt)
-          (setq end line-reminder--before-end-pt)
-          (setq begin-linum line-reminder--before-begin-linum)
-          (setq end-linum line-reminder--before-end-linum))
+            (setq end-linum (line-reminder--line-number-at-pos end)
+                  begin-linum (line-reminder--line-number-at-pos beg))
+          (setq beg line-reminder--before-begin-pt
+                end line-reminder--before-end-pt
+                begin-linum line-reminder--before-begin-linum
+                end-linum line-reminder--before-end-linum))
 
         (goto-char beg)
 
