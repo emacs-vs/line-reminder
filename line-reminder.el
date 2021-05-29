@@ -481,9 +481,7 @@ or less than zero line in current buffer."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
     (setq line-reminder--change-lines '()
           line-reminder--saved-lines '())
-    (line-reminder--ind-clear-indicators-absolute)
-    ;; Reset flag
-    (setq line-reminder--undo-cancel-p nil)))
+    (line-reminder--ind-clear-indicators-absolute)))
 
 ;;; Loading
 
