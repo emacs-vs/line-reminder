@@ -147,9 +147,6 @@
 (defvar-local line-reminder--undo-cancel-p nil
   "If non-nil, we should remove record of changes/saved lines for undo actions.")
 
-(defvar-local line-reminder--undo-reached-root-p nil
-  "Flag to record if reached upper undo limit.")
-
 ;;; Util
 
 (defun line-reminder--use-indicators-p ()
@@ -477,25 +474,18 @@ or less than zero line in current buffer."
   (or (eq buffer-undo-list t)
       (null (undo-tree-node-previous (undo-tree-current buffer-undo-tree)))))
 
-(defun line-reminder--undo (fnc &rest args)
-  "Advice execute around function `undo', FNC and ARGS."
-  (let ((result (apply fnc args)))
-    (when (and (stringp result) (string= result "Undo"))
-      (setq line-reminder--undo-reached-root-p t))))
-
 (defun line-reminder--undo-root-p ()
   "Compatible version to check root of undo list for different undo packages."
   (cond
    ((and (featurep 'undo-tree) undo-tree-mode)
     (ignore-errors (line-reminder--undo-tree-root-p)))
-   (t line-reminder--undo-reached-root-p)))
+   (t (eq pending-undo-list t))))
 
 (defun line-reminder--post-command ()
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
     (setq line-reminder--change-lines '()
-          line-reminder--saved-lines '()
-          line-reminder--undo-reached-root-p nil)  ; reset flag
+          line-reminder--saved-lines '())
     (line-reminder--ind-clear-indicators-absolute)))
 
 ;;; Loading
@@ -511,8 +501,7 @@ or less than zero line in current buffer."
   (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
-  (advice-add 'save-buffer :after #'line-reminder--save-buffer)
-  (advice-add 'undo :around #'line-reminder--undo))
+  (advice-add 'save-buffer :after #'line-reminder--save-buffer))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
@@ -520,7 +509,6 @@ or less than zero line in current buffer."
   (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
   (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (advice-remove 'save-buffer #'line-reminder--save-buffer)
-  (advice-remove 'undo #'line-reminder--undo)
   (line-reminder-clear-reminder-lines-sign))
 
 ;;;###autoload
