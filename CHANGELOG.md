@@ -13,4 +13,4 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.5.0
 > Released May 28, 2021
 
-* Add feature to for undone changes, #8.
+* Add feature to for undone changes, [#8](https://github.com/jcs-elpa/line-reminder/issues/8).
