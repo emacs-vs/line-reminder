@@ -463,7 +463,7 @@ or less than zero line in current buffer."
 
 ;;; Save
 
-(defun line-reminder--save-buffer ()
+(defun line-reminder--save-buffer (&rest _)
   "Advice execute after function `save-buffer'."
   (when line-reminder-mode (line-reminder-transfer-to-saved-lines)))
 
