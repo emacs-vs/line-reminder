@@ -8,7 +8,7 @@
 ;; Keyword: annotation line number linum reminder highlight display
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.4") (indicators "0.0.4") (fringe-helper "1.0.1"))
-;; URL: https://github.com/jcs-elpa/line-reminder
+;; URL: https://github.com/emacs-vs/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -39,7 +39,7 @@
   "Line annotation for changed and saved lines."
   :prefix "line-reminder-"
   :group 'tool
-  :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/line-reminder"))
+  :link '(url-link :tag "Repository" "https://github.com/emacs-vs/line-reminder"))
 
 (defcustom line-reminder-show-option 'linum
   "Option to show indicators in buffer."
