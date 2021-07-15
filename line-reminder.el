@@ -154,8 +154,7 @@
 (defvar linum-format)
 (defvar ind-managed-absolute-indicators)
 (defvar buffer-undo-tree)
-
-(declare-function undo-tree-mode "ext:undo-tree.el")
+(defvar undo-tree-mode)
 
 ;;
 ;; (@* "Util" )
