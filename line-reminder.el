@@ -156,6 +156,8 @@
 (defvar buffer-undo-tree)
 (defvar undo-tree-mode)
 
+(declare-function ind-create-indicator-at-line "ext:indicators.el")
+(declare-function ind-clear-indicators-absolute "ext:indicators.el")
 (declare-function undo-tree-current "ext:undo-tree.el")
 (declare-function undo-tree-node-previous "ext:undo-tree.el")
 
