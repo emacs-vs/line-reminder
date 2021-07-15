@@ -151,6 +151,7 @@
 ;; (@* "External" )
 ;;
 
+(defvar linum-format)
 (defvar ind-managed-absolute-indicators)
 (defvar buffer-undo-tree)
 
