@@ -147,6 +147,12 @@
 (defvar-local line-reminder--undo-cancel-p nil
   "If non-nil, we should remove record of changes/saved lines for undo actions.")
 
+;;
+;; (@* "External" )
+;;
+
+(defvar ind-managed-absolute-indicators)
+
 ;;; Util
 
 (defun line-reminder--use-indicators-p ()

@@ -5,6 +5,4 @@
 (files "line-reminder.el")
 
 (development
- (depends-on "ert-runner")
- (depends-on "indicators")
- (depends-on "fringe-helper"))
+ (depends-on "ert-runner"))
