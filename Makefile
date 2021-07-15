@@ -3,9 +3,9 @@ SHELL := /usr/bin/env bash
 EMACS ?= emacs
 CASK ?= cask
 
-PKG-FILES := company-fuzzy.el
+PKG-FILES := line-reminder.el
 
-TEST-FILES := $(shell ls test/company-fuzzy-*.el)
+TEST-FILES := $(shell ls test/line-reminder-*.el)
 
 .PHONY: clean checkdoc lint unix-build unix-compile	unix-test
 
