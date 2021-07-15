@@ -155,6 +155,8 @@
 (defvar ind-managed-absolute-indicators)
 (defvar buffer-undo-tree)
 
+(declare-function undo-tree-mode "ext:undo-tree.el")
+
 ;;
 ;; (@* "Util" )
 ;;
