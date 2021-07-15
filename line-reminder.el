@@ -156,6 +156,8 @@
 (defvar buffer-undo-tree)
 (defvar undo-tree-mode)
 
+(declare-function undo-tree-current "ext:undo-tree.el")
+
 ;;
 ;; (@* "Util" )
 ;;
