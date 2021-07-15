@@ -152,6 +152,7 @@
 ;;
 
 (defvar ind-managed-absolute-indicators)
+(defvar buffer-undo-tree)
 
 ;;
 ;; (@* "Util" )
