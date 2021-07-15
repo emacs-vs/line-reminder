@@ -157,6 +157,7 @@
 (defvar undo-tree-mode)
 
 (declare-function undo-tree-current "ext:undo-tree.el")
+(declare-function undo-tree-node-previous "ext:undo-tree.el")
 
 ;;
 ;; (@* "Util" )
