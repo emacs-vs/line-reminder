@@ -301,6 +301,47 @@ LN : pass in by `linum-format' variable."
     result-sign))
 
 ;;
+;; (@* "Entry" )
+;;
+
+(defun line-reminder--enable ()
+  "Enable `line-reminder' in current buffer."
+  (cl-case line-reminder-show-option
+    (linum
+     (require 'linum)
+     (setq-local linum-format 'line-reminder--linum-format))
+    (indicators
+     (require 'indicators)))
+  (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
+  (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
+  (add-hook 'post-command-hook #'line-reminder--post-command nil t)
+  (advice-add 'save-buffer :after #'line-reminder--save-buffer))
+
+(defun line-reminder--disable ()
+  "Disable `line-reminder' in current buffer."
+  (remove-hook 'before-change-functions #'line-reminder--before-change-functions t)
+  (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
+  (remove-hook 'post-command-hook #'line-reminder--post-command t)
+  (advice-remove 'save-buffer #'line-reminder--save-buffer)
+  (line-reminder-clear-reminder-lines-sign))
+
+;;;###autoload
+(define-minor-mode line-reminder-mode
+  "Minor mode 'line-reminder-mode'."
+  :lighter " LR"
+  :group line-reminder
+  (if line-reminder-mode (line-reminder--enable) (line-reminder--disable)))
+
+(defun line-reminder--turn-on-line-reminder-mode ()
+  "Turn on the 'line-reminder-mode'."
+  (line-reminder-mode 1))
+
+;;;###autoload
+(define-globalized-minor-mode global-line-reminder-mode
+  line-reminder-mode line-reminder--turn-on-line-reminder-mode
+  :require 'line-reminder)
+
+;;
 ;; (@* "Core" )
 ;;
 
@@ -501,47 +542,6 @@ or less than zero line in current buffer."
     (setq line-reminder--change-lines '()
           line-reminder--saved-lines '())
     (line-reminder--ind-clear-indicators-absolute)))
-
-;;
-;; (@* "Loading" )
-;;
-
-(defun line-reminder--enable ()
-  "Enable `line-reminder' in current buffer."
-  (cl-case line-reminder-show-option
-    (linum
-     (require 'linum)
-     (setq-local linum-format 'line-reminder--linum-format))
-    (indicators
-     (require 'indicators)))
-  (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
-  (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
-  (add-hook 'post-command-hook #'line-reminder--post-command nil t)
-  (advice-add 'save-buffer :after #'line-reminder--save-buffer))
-
-(defun line-reminder--disable ()
-  "Disable `line-reminder' in current buffer."
-  (remove-hook 'before-change-functions #'line-reminder--before-change-functions t)
-  (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
-  (remove-hook 'post-command-hook #'line-reminder--post-command t)
-  (advice-remove 'save-buffer #'line-reminder--save-buffer)
-  (line-reminder-clear-reminder-lines-sign))
-
-;;;###autoload
-(define-minor-mode line-reminder-mode
-  "Minor mode 'line-reminder-mode'."
-  :lighter " LR"
-  :group line-reminder
-  (if line-reminder-mode (line-reminder--enable) (line-reminder--disable)))
-
-(defun line-reminder--turn-on-line-reminder-mode ()
-  "Turn on the 'line-reminder-mode'."
-  (line-reminder-mode 1))
-
-;;;###autoload
-(define-globalized-minor-mode global-line-reminder-mode
-  line-reminder-mode line-reminder--turn-on-line-reminder-mode
-  :require 'line-reminder)
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
