@@ -153,7 +153,9 @@
 
 (defvar ind-managed-absolute-indicators)
 
-;;; Util
+;;
+;; (@* "Util" )
+;;
 
 (defun line-reminder--use-indicators-p ()
   "Return non-nil if using indicator, else return nil."
@@ -298,7 +300,9 @@ LN : pass in by `linum-format' variable."
     (setq result-sign (concat normal-sign reminder-sign))
     result-sign))
 
-;;; Core
+;;
+;; (@* "Core" )
+;;
 
 ;;;###autoload
 (defun line-reminder-clear-reminder-lines-sign ()
@@ -467,13 +471,17 @@ or less than zero line in current buffer."
         ;; Remove out range.
         (line-reminder--remove-lines-out-range)))))
 
-;;; Save
+;;
+;; (@* "Save" )
+;;
 
 (defun line-reminder--save-buffer (&rest _)
   "Advice execute after function `save-buffer'."
   (when line-reminder-mode (line-reminder-transfer-to-saved-lines)))
 
-;;; Undo
+;;
+;; (@* "Undo" )
+;;
 
 (defun line-reminder--undo-tree-root-p ()
   "Return non-nil, if undo is at the root of the undo list."
@@ -494,7 +502,9 @@ or less than zero line in current buffer."
           line-reminder--saved-lines '())
     (line-reminder--ind-clear-indicators-absolute)))
 
-;;; Loading
+;;
+;; (@* "Loading" )
+;;
 
 (defun line-reminder--enable ()
   "Enable `line-reminder' in current buffer."
