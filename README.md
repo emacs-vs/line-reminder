@@ -25,13 +25,20 @@ Or you can just enable in specific buffer you want.
 (line-reminder-mode t)
 ```
 
-### ❗ Display Annotation
+## ❗ Display Annotation
 
 You can either set `line-reminder-show-option` to `linum` or `indicators` like
 the following snippet below.
 
 ```el
 (setq line-reminder-show-option 'linum)  ; Or set to 'indicators
+```
+
+Change display symbol: (Default to `"▐"`)
+
+```el
+(setq line-reminder-modified-sign "▐"
+      line-reminder-saved-sign "▐")
 ```
 
 ### 💥 Using `linum`
@@ -51,24 +58,59 @@ Customize format for how line annotation is displayed.
 
 ### 💥 Using `indicators`
 
-Customize the symbol of the fringe (bitmap)
+Customize the symbol of the fringe: (Default to `'line-reminder--default-bitmap`)
 
 ```el
-(setq line-indicators-fringe 'filled-rectangle)
+(setq line-reminder-bitmap 'filled-rectangle)
 ```
 
-If you change the fringe location by altering this variable.
+If you change the fringe location by altering this variable: (Default to `'left-fringe`)
 
 ```el
-(setq line-indicators-fringe-placed 'left-fringe)
+(setq line-reminder-fringe-placed 'left-fringe)
 ```
 
-### 💨 Face
+## Display thumbnail
+
+You can display thumbnail by setting:
+
+```el
+(setq line-reminder-thumbnail t)
+```
+
+*P.S. fringe is oppsing from variable `line-reminder-fringe-placed`, hence it's
+default to `right-fringe`*
+
+To change display time: (Default to `0.2`)
+
+```el
+(setq line-reminder-thumbnail-delay 0.2)
+```
+
+You can change the thumbnail bitmap by: (Defaul to `line-reminder--default-thumbnail-bitmap`)
+
+```el
+(setq line-reminder-thumbnail-bitmap 'filled-rectangle)
+```
+
+Change thumbnail display symbol: (Default to `"▐"`)
+
+```el
+(setq line-reminder-modified-sign-thumb "▐"
+      line-reminder-saved-sign-thumb "▐")
+```
+
+## 💨 Face
 
 List of face you can customize.
 
+> For regular indicators
+
 * `line-reminder-modified-sign-face`
 * `line-reminder-saved-sign-face`
+
+> For thumbnail
+
 * `line-reminder-modified-sign-thumb-face`
 * `line-reminder-saved-sign-thumb-face`
 
