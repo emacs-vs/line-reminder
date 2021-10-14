@@ -70,7 +70,7 @@ If you change the fringe location by altering this variable: (Default to `'left-
 (setq line-reminder-fringe-placed 'left-fringe)
 ```
 
-## Display thumbnail
+## 🖼️ Display thumbnail
 
 You can display thumbnail by setting:
 
