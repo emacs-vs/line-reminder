@@ -598,7 +598,6 @@ or less than zero line in current buffer."
       (/ (window-pixel-height) (line-pixel-height))
     (window-height)))
 
-
 (defun line-reminder--create-thumb-overlay (face)
   "Create single thumbnail overlay with FACE."
   (let* ((left-or-right (line-reminder--oppose-fringe line-reminder-fringe-placed))
@@ -606,7 +605,7 @@ or less than zero line in current buffer."
          ;; If `pos' is at the beginning of line, overlay of the
          ;; fringe will be on the previous visual line.
          (pos (if (= (line-end-position) pos) pos (1+ pos)))
-         (display-string `(,left-or-right line-reminder-thumbnail-bitmap ,face))
+         (display-string `(,left-or-right ,line-reminder-thumbnail-bitmap ,face))
          (after-string (propertize "." 'display display-string))
          (overlay (make-overlay pos pos)))
     (overlay-put overlay 'after-string after-string)
