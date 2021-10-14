@@ -2,7 +2,7 @@
 [![MELPA](https://melpa.org/packages/line-reminder-badge.svg)](https://melpa.org/#/line-reminder)
 [![MELPA Stable](https://stable.melpa.org/packages/line-reminder-badge.svg)](https://stable.melpa.org/#/line-reminder)
 
-# line-reminder
+# ❗ line-reminder
 > Line annotation for changed and saved lines.
 
 [![CI](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml)
@@ -11,7 +11,7 @@
 |:--------------------------------------:|:-----------------------------------:|
 |<img src="./etc/emacs-comparison.png"/> | <img src="./etc/vs-comparison.png"/>|
 
-## Usage
+## 🔨 Usage
 
 Enable for all buffers.
 
@@ -34,7 +34,7 @@ the following snippet below.
 (setq line-reminder-show-option 'linum)  ; Or set to 'indicators
 ```
 
-### Using `linum`
+### 💥 Using `linum`
 
 `linum` uses text to display annotation, you can customize the two variables
 below to change the display symbol. The default value for both variables is set
@@ -49,7 +49,7 @@ Customize format for how line annotation is displayed.
 (setq line-reminder-linum-format "%s ")
 ```
 
-### Using `indicators`
+### 💥 Using `indicators`
 
 Customize the symbol of the fringe (bitmap)
 
@@ -63,7 +63,7 @@ If you change the fringe location by altering this variable.
 (setq line-indicators-fringe-placed 'left-fringe)
 ```
 
-### Face
+### 💨 Face
 
 List of face you can customize.
 
