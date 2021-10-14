@@ -67,6 +67,16 @@
   :type 'integer
   :group 'line-reminder)
 
+(defcustom line-reminder-modified-sign-thumb-priority 20
+  "Priority for modified lines thumbnail overlays."
+  :type 'integer
+  :group 'line-reminder)
+
+(defcustom line-reminder-saved-sign-thumb-priority 10
+  "Priority for saved lines thumbnail overlays."
+  :type 'integer
+  :group 'line-reminder)
+
 (defcustom line-reminder-linum-format "%s "
   "Format to display annotation using `linum`."
   :type 'string
@@ -79,6 +89,16 @@
 
 (defcustom line-reminder-saved-sign "▐"
   "Saved sign."
+  :type 'string
+  :group 'line-reminder)
+
+(defcustom line-reminder-modified-sign-thumb "▐"
+  "String to display modified line thumbnail."
+  :type 'string
+  :group 'line-reminder)
+
+(defcustom line-reminder-saved-sign-thumb "▐"
+  "String to display saved line thumbnail."
   :type 'string
   :group 'line-reminder)
 
@@ -580,16 +600,6 @@ or less than zero line in current buffer."
   :type 'float
   :group 'line-reminder)
 
-(defcustom line-reminder-modified-sign-thumb "▐"
-  "String to display modified line thumbnail."
-  :type 'string
-  :group 'line-reminder)
-
-(defcustom line-reminder-saved-sign-thumb "▐"
-  "String to display saved line thumbnail."
-  :type 'string
-  :group 'line-reminder)
-
 (fringe-helper-define 'line-reminder--default-thumbnail-bitmap nil
   "xx...." "xx...." "xx...." "xx...." "xx...." "xx...." "xx...."
   "xx...." "xx...." "xx...." "xx...." "xx...." "xx...." "xx...."
@@ -609,16 +619,6 @@ or less than zero line in current buffer."
 (defface line-reminder-saved-sign-thumb-face
   `((t :foreground "#577430"))
   "Modifed sign face."
-  :group 'line-reminder)
-
-(defcustom line-reminder-modified-sign-thumb-priority 20
-  "Priority for modified lines thumbnail overlays."
-  :type 'integer
-  :group 'line-reminder)
-
-(defcustom line-reminder-saved-sign-thumb-priority 10
-  "Priority for saved lines thumbnail overlays."
-  :type 'integer
   :group 'line-reminder)
 
 (defvar-local line-reminder--thumbnail-overlays nil
