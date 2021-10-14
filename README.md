@@ -27,8 +27,8 @@ Or you can just enable in specific buffer you want.
 
 ### Display Annotation
 
-You can either set `line-reminder-show-option` to `linum` or `indicators`
-like the following snippet below.
+You can either set `line-reminder-show-option` to `linum` or `indicators` like
+the following snippet below.
 
 ```el
 (setq line-reminder-show-option 'linum)  ; Or set to 'indicators
@@ -51,7 +51,7 @@ Customize format for how line annotation is displayed.
 
 ### Using `indicators`
 
-Customize the symbol of the fringe
+Customize the symbol of the fringe (bitmap)
 
 ```el
 (setq line-indicators-fringe 'filled-rectangle)
@@ -69,6 +69,8 @@ List of face you can customize.
 
 * `line-reminder-modified-sign-face`
 * `line-reminder-saved-sign-face`
+* `line-reminder-modified-sign-thumb-face`
+* `line-reminder-saved-sign-thumb-face`
 
 ## Contribution
 
