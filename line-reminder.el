@@ -631,7 +631,7 @@ or less than zero line in current buffer."
               (line-reminder--create-thumb-overlay face))))))))
 
 (defun line-reminder--show-thumb (window &rest _)
-  "Show thumbnail using overlays."
+  "Show thumbnail using overlays inside WINDOW."
   (with-selected-window window
     (line-reminder--make-thumb-overlays line-reminder--saved-lines 'line-reminder-saved-sign-face)
     (line-reminder--make-thumb-overlays line-reminder--change-lines 'line-reminder-modified-sign-face)))
@@ -640,7 +640,7 @@ or less than zero line in current buffer."
   "Timer to show thumbnail.")
 
 (defun line-reminder--start-show-thumb (&optional window &rest _)
-  "Start show thumbnail timer."
+  "Start show thumbnail timer in WINDOW."
   (when line-reminder-thumbnail
     (line-reminder--delete-thumb-overlays)
     (when (timerp line-reminder--thumbnail-timer)
