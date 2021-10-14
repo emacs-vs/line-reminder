@@ -195,10 +195,8 @@ This function uses `string-match-p'."
      :bitmap line-reminder-fringe :face fc
      :priority
      (cl-case fc
-       (line-reminder-modified-sign-face
-        line-reminder-modified-sign-priority)
-       (line-reminder-saved-sign-face
-        line-reminder-saved-sign-priority)))))
+       (`line-reminder-modified-sign-face line-reminder-modified-sign-priority)
+       (`line-reminder-saved-sign-face line-reminder-saved-sign-priority)))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
   "Remove the indicator on LINE."
@@ -210,10 +208,10 @@ This function uses `string-match-p'."
 (defun line-reminder--ind-delete-dups ()
   "Remove duplicates for indicators overlay once."
   (when (line-reminder--use-indicators-p)
-    (let ((record-lst '()) (new-lst '()) (mkr nil) (mkr-pos -1))
+    (let (record-lst new-lst mkr (mkr-pos -1))
       (dolist (ind ind-managed-absolute-indicators)
-        (setq mkr (car ind))
-        (setq mkr-pos (marker-position mkr))
+        (setq mkr (car ind)
+              mkr-pos (marker-position mkr))
         (if (line-reminder--contain-list-integer record-lst mkr-pos)
             (remove-overlays mkr-pos mkr-pos 'ind-indicator-absolute t)
           (push mkr-pos record-lst)
@@ -225,7 +223,7 @@ This function uses `string-match-p'."
   (save-excursion
     (goto-char pos)
     (let ((start-pt (1+ (line-beginning-position))) (end-pt (line-end-position))
-          (remove-inds '()))
+          remove-inds)
       (dolist (ind ind-managed-absolute-indicators)
         (let* ((mkr (car ind)) (mkr-pos (marker-position mkr)))
           (when (and (>= mkr-pos start-pt) (<= mkr-pos end-pt))
@@ -242,8 +240,8 @@ This function uses `string-match-p'."
 
 (defun line-reminder--remove-line-from-change-line (ln)
   "Remove LN from all line lists variable."
-  (setq line-reminder--change-lines (remove ln line-reminder--change-lines))
-  (setq line-reminder--saved-lines (remove ln line-reminder--saved-lines))
+  (setq line-reminder--change-lines (remove ln line-reminder--change-lines)
+        line-reminder--saved-lines (remove ln line-reminder--saved-lines))
   (when (line-reminder--use-indicators-p)
     (line-reminder--ind-remove-indicator-at-line ln)))
 
@@ -285,18 +283,16 @@ LN : Pass is line number for normal sign."
 LN : pass in by `linum-format' variable."
   (let ((reminder-sign "") (result-sign "")
         (normal-sign (line-reminder--propertized-sign-by-type 'normal ln))
-        (is-sign-exists nil))
+        is-sign-exists)
     (cond
      ;; NOTE: Check if change lines list.
      ((line-reminder--contain-list-integer line-reminder--change-lines ln)
-      (progn
-        (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified))
-        (setq is-sign-exists t)))
+      (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified)
+            is-sign-exists t))
      ;; NOTE: Check if saved lines list.
      ((line-reminder--contain-list-integer line-reminder--saved-lines ln)
-      (progn
-        (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved))
-        (setq is-sign-exists t))))
+      (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved)
+            is-sign-exists t)))
 
     ;; If the sign exist, then remove the last character from the normal sign.
     ;; So we can keep our the margin/padding the same without modifing the
@@ -357,8 +353,8 @@ LN : pass in by `linum-format' variable."
 (defun line-reminder-clear-reminder-lines-sign ()
   "Clear all the reminder lines' sign."
   (interactive)
-  (setq line-reminder--change-lines '())
-  (setq line-reminder--saved-lines '())
+  (setq line-reminder--change-lines nil
+        line-reminder--saved-lines nil)
   (line-reminder--ind-clear-indicators-absolute))
 
 (defun line-reminder--is-valid-line-reminder-situation (&optional beg end)
@@ -427,7 +423,7 @@ or less than zero line in current buffer."
   (setq line-reminder--saved-lines
         (append line-reminder--saved-lines line-reminder--change-lines))
   ;; Clear the change lines.
-  (setq line-reminder--change-lines '())
+  (setq line-reminder--change-lines nil)
 
   (delete-dups line-reminder--saved-lines)  ; Removed save duplicates
   (line-reminder--remove-lines-out-range)  ; Remove out range.
@@ -547,8 +543,8 @@ or less than zero line in current buffer."
 (defun line-reminder--post-command ()
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
-    (setq line-reminder--change-lines '()
-          line-reminder--saved-lines '())
+    (setq line-reminder--change-lines nil
+          line-reminder--saved-lines nil)
     (line-reminder--ind-clear-indicators-absolute)))
 
 (provide 'line-reminder)
