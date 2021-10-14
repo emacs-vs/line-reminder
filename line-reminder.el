@@ -82,18 +82,19 @@
   :type 'string
   :group 'line-reminder)
 
-(fringe-helper-define 'line-reminder-bitmap nil
-  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
-  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
-  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx..")
-
 (defcustom line-reminder-fringe-placed 'left-fringe
   "Line indicators fringe location."
   :type '(choice (const :tag "On the left fringe" left-fringe)
                  (const :tag "On the right fringe" right-fringe))
   :group 'line-reminder)
 
-(defcustom line-reminder-fringe 'line-reminder-bitmap
+(fringe-helper-define 'line-reminder--default-bitmap nil
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
+  "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.." "..xxx.."
+  "..xxx.." "..xxx..")
+
+(defcustom line-reminder-bitmap 'line-reminder--default-bitmap
   "Line indicators fringe symbol."
   :type 'symbol
   :group 'line-reminder)
@@ -197,7 +198,7 @@ This function uses `string-match-p'."
   (let ((inhibit-message t) (message-log-max nil))
     (ind-create-indicator-at-line
      line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
-     :bitmap line-reminder-fringe :face face
+     :bitmap line-reminder-bitmap :face face
      :priority (line-reminder--get-priority face))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
@@ -322,8 +323,8 @@ LINE : pass in by `linum-format' variable."
   (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   (advice-add 'save-buffer :after #'line-reminder--save-buffer)
-  (add-hook 'window-scroll-functions 'line-reminder--scroll nil t)
-  (add-hook 'window-configuration-change-hook 'line-reminder--show-thumb nil t))
+  (add-hook 'window-scroll-functions 'line-reminder--start-show-thumb nil t)
+  (add-hook 'window-configuration-change-hook 'line-reminder--start-show-thumb nil t))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
@@ -332,8 +333,8 @@ LINE : pass in by `linum-format' variable."
   (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (advice-remove 'save-buffer #'line-reminder--save-buffer)
   (line-reminder-clear-reminder-lines-sign)
-  (remove-hook 'window-scroll-functions 'line-reminder--scroll t)
-  (remove-hook 'window-configuration-change-hook 'line-reminder--show-thumb t))
+  (remove-hook 'window-scroll-functions 'line-reminder--start-show-thumb t)
+  (remove-hook 'window-configuration-change-hook 'line-reminder--start-show-thumb t))
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
@@ -450,7 +451,7 @@ or less than zero line in current buffer."
         (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face))
       (dolist (line line-reminder--saved-lines)
         (line-reminder--mark-line-by-linum line 'line-reminder-saved-sign-face))
-      (line-reminder--show-thumb))))
+      (line-reminder--start-show-thumb))))
 
 (defun line-reminder--before-change-functions (beg end)
   "Do stuff before buffer is changed with BEG and END."
@@ -522,10 +523,7 @@ or less than zero line in current buffer."
         (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
-        (line-reminder--remove-lines-out-range)
-
-        ;; Show thumbnail
-        (line-reminder--show-thumb)))))
+        (line-reminder--remove-lines-out-range)))))
 
 ;;
 ;; (@* "Save" )
@@ -567,11 +565,19 @@ or less than zero line in current buffer."
   :type 'boolean
   :group 'line-reminder)
 
-(fringe-helper-define 'line-reminder-thumbnail-bitmap nil
+(defcustom line-reminder-thumbnail-delay 0.2
+  "Delay time to display thumbnail.")
+
+(fringe-helper-define 'line-reminder--default-thumbnail-bitmap nil
   "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...."
   "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...."
   "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...." "xxx...."
   "xxx...." "xxx....")
+
+(defcustom line-reminder-thumbnail-bitmap 'line-reminder--default-thumbnail-bitmap
+  "Bitmap for thumbnail."
+  :type 'symbol
+  :group 'line-reminder)
 
 (defvar-local line-reminder--thumbnail-overlays nil
   "Overlays indicate thumbnail.")
@@ -589,6 +595,7 @@ or less than zero line in current buffer."
            (display-graphic-p))
       (/ (window-pixel-height) (line-pixel-height))
     (window-height)))
+
 
 (defun line-reminder--create-thumb-overlay (face)
   "Create single thumbnail overlay with FACE."
@@ -619,25 +626,33 @@ or less than zero line in current buffer."
             (setq percent-line (* (/ line buffer-lines) window-lines)
                   percent-line (truncate percent-line))
             (move-to-window-line 0)
-            (vertical-motion percent-line)
-            (line-reminder--create-thumb-overlay face)))))))
+            (when (= (vertical-motion percent-line) percent-line)
+              (line-reminder--create-thumb-overlay face))))))))
 
-(defun line-reminder--show-thumb (&rest _)
+(defun line-reminder--show-thumb (window &rest _)
   "Show thumbnail using overlays."
+  (with-selected-window window
+    (line-reminder--make-thumb-overlays line-reminder--saved-lines 'line-reminder-saved-sign-face)
+    (line-reminder--make-thumb-overlays line-reminder--change-lines 'line-reminder-modified-sign-face)))
+
+(defvar-local line-reminder--thumbnail-timer nil
+  "Timer to show thumbnail.")
+
+(defun line-reminder--start-show-thumb (&optional window &rest _)
+  "Start show thumbnail timer."
   (when line-reminder-thumbnail
     (line-reminder--delete-thumb-overlays)
-    (line-reminder--make-thumb-overlays line-reminder--change-lines 'line-reminder-modified-sign-face)
-    (line-reminder--make-thumb-overlays line-reminder--saved-lines 'line-reminder-saved-sign-face)))
+    (when (timerp line-reminder--thumbnail-timer)
+      (cancel-timer line-reminder--thumbnail-timer))
+    (setq line-reminder--thumbnail-timer
+          (run-with-idle-timer line-reminder-thumbnail-delay nil
+                               #'line-reminder--show-thumb (or window (selected-window))))))
 
 (defun line-reminder--delete-thumb-overlays ()
   "Delete overlays of thumbnail."
   (when line-reminder--thumbnail-overlays
     (mapc 'delete-overlay line-reminder--thumbnail-overlays)
     (setq line-reminder--thumbnail-overlays nil)))
-
-(defun line-reminder--scroll (window &rest _)
-  "Scroll WINDOW hook."
-  (with-selected-window window (line-reminder--show-thumb)))
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
