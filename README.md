@@ -2,7 +2,7 @@
 [![MELPA](https://melpa.org/packages/line-reminder-badge.svg)](https://melpa.org/#/line-reminder)
 [![MELPA Stable](https://stable.melpa.org/packages/line-reminder-badge.svg)](https://stable.melpa.org/#/line-reminder)
 
-# ❗ line-reminder
+# line-reminder
 > Line annotation for changed and saved lines.
 
 [![CI](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml)
@@ -25,7 +25,7 @@ Or you can just enable in specific buffer you want.
 (line-reminder-mode t)
 ```
 
-### Display Annotation
+### ❗ Display Annotation
 
 You can either set `line-reminder-show-option` to `linum` or `indicators` like
 the following snippet below.
