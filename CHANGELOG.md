@@ -9,6 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 > Released N/A
 
 * Limit feature undone changes to only valid buffer, unlike `*scratch*` buffer.
+* Added thumbnail support on the opposing fringe.
 
 ## 0.5.0
 > Released May 28, 2021
