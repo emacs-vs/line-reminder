@@ -567,7 +567,7 @@ or less than zero line in current buffer."
 
 (defcustom line-reminder-thumbnail-delay 0.2
   "Delay time to display thumbnail."
-  :type 'boolean
+  :type 'float
   :group 'line-reminder)
 
 (fringe-helper-define 'line-reminder--default-thumbnail-bitmap nil
@@ -578,7 +578,7 @@ or less than zero line in current buffer."
 
 (defcustom line-reminder-thumbnail-bitmap 'line-reminder--default-thumbnail-bitmap
   "Bitmap for thumbnail."
-  :type 'float
+  :type 'symbol
   :group 'line-reminder)
 
 (defvar-local line-reminder--thumbnail-overlays nil
