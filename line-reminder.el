@@ -147,12 +147,6 @@
 (defvar-local line-reminder--line-status (ht-create)
   "Reocrd modified/saved lines' status in hash-table")
 
-(defvar-local line-reminder--change-lines (ht-create)
-  "List of line that change in current temp buffer.")
-
-(defvar-local line-reminder--saved-lines (ht-create)
-  "List of line that saved in current temp buffer.")
-
 (defvar-local line-reminder--before-max-pt -1
   "Record down the point max for out of range calculation.")
 
@@ -225,11 +219,17 @@ This function uses `string-match-p'."
     (`line-reminder-modified-sign-thumb-face line-reminder-modified-sign-thumb-priority)
     (`line-reminder-saved-sign-thumb-face line-reminder-saved-sign-thumb-priority)))
 
-(defun line-reminder--get-face (sign)
-  "Return face by SIGN."
+(defun line-reminder--get-face (sign &optional thumbnail)
+  "Return face by SIGN.
+
+If optional argument thumbnail is non-nil, return in thumbnail faces."
   (cond ((numberp sign)
          (when-let ((sign (ht-get line-reminder--line-status sign)))
-           (line-reminder--get-face sign)))
+           (line-reminder--get-face sign thumbnail)))
+        (thumbnail
+         (cl-case sign
+           (`modified 'line-reminder-modified-sign-thumb-face)
+           (`saved 'line-reminder-saved-sign-thumb-face)))
         (t
          (cl-case sign
            (`modified 'line-reminder-modified-sign-face)
@@ -329,26 +329,18 @@ LINE : Pass is line number for normal sign."
 (defun line-reminder--linum-format (line)
   "Core line reminder format string logic here.
 LINE : pass in by `linum-format' variable."
-  (let ((reminder-sign "") (result-sign "")
+  (let ((sign (ht-get line-reminder--line-status line))
         (normal-sign (line-reminder--propertized-sign-by-type 'normal line))
-        is-sign-exists)
-    (cl-case (ht-get line-reminder--line-status line)
-      (`modified
-       (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified)
-             is-sign-exists t))
-      (`saved
-       (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved)
-             is-sign-exists t)))
-
-    ;; If the sign exist, then remove the last character from the normal sign.
-    ;; So we can keep our the margin/padding the same without modifing the
-    ;; margin/padding width.
-    (when is-sign-exists
-      (setq normal-sign (substring normal-sign 0 (1- (length normal-sign)))))
+        (reminder-sign ""))
+    (when sign
+      (setq reminder-sign (line-reminder--propertized-sign-by-type sign)
+            ;; If the sign exist, then remove the last character from the normal
+            ;; sign. So we can keep our the margin/padding the same without
+            ;; modifing the margin/padding width.
+            normal-sign (substring normal-sign 0 (1- (length normal-sign)))))
 
     ;; Combnie the result format.
-    (setq result-sign (concat normal-sign reminder-sign))
-    result-sign))
+    (concat normal-sign reminder-sign)))
 
 ;;
 ;; (@* "Entry" )
@@ -405,6 +397,7 @@ LINE : pass in by `linum-format' variable."
   (interactive)
   (ht-clear line-reminder--line-status)
   (line-reminder--ind-clear-indicators-absolute)
+  (line-reminder--stop-thumb-timer)
   (line-reminder--delete-thumb-overlays))
 
 (defun line-reminder--is-valid-line-reminder-situation (&optional beg end)
@@ -674,36 +667,38 @@ or less than zero line in current buffer."
   (if (display-graphic-p) (line-reminder--create-thumb-fringe-overlay face)
     (line-reminder--create-thumb-tty-overlay face)))
 
-(defun line-reminder--make-thumb-overlays (list face)
-  "Make thumbnail overlays with LIST and FACE."
-  (when list
-    (let ((window-lines (float (line-reminder--window-height)))
-          (buffer-lines (float line-reminder--cache-max-line))
-          percent-line)
-      (when (< window-lines buffer-lines)
-        (save-excursion
-          (dolist (line list)
-            (setq percent-line (* (/ line buffer-lines) window-lines)
-                  percent-line (floor percent-line))
-            (move-to-window-line 0)
-            (when (= (vertical-motion percent-line) percent-line)
-              (line-reminder--create-thumb-overlay face))))))))
-
 (defun line-reminder--show-thumb (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
   (with-selected-window window
-    (line-reminder--make-thumb-overlays line-reminder--saved-lines 'line-reminder-saved-sign-thumb-face)
-    (line-reminder--make-thumb-overlays line-reminder--change-lines 'line-reminder-modified-sign-thumb-face)))
+    (when line-reminder--cache-max-line
+      (let ((window-lines (float (line-reminder--window-height)))
+            (buffer-lines (float line-reminder--cache-max-line))
+            percent-line face)
+        (when (< window-lines buffer-lines)
+          (save-excursion
+            (ht-map
+             (lambda (line sign)
+               (setq face (line-reminder--get-face sign t)
+                     percent-line (* (/ line buffer-lines) window-lines)
+                     percent-line (floor percent-line))
+               (move-to-window-line 0)
+               (when (= (vertical-motion percent-line) percent-line)
+                 (line-reminder--create-thumb-overlay face)))
+             line-reminder--line-status)))))))
 
 (defvar-local line-reminder--thumbnail-timer nil
   "Timer to show thumbnail.")
+
+(defun line-reminder--stop-thumb-timer ()
+  "Stop thumbnail timer."
+  (when (timerp line-reminder--thumbnail-timer)
+    (cancel-timer line-reminder--thumbnail-timer)))
 
 (defun line-reminder--start-show-thumb (&optional window &rest _)
   "Start show thumbnail timer in WINDOW."
   (when line-reminder-thumbnail
     (line-reminder--delete-thumb-overlays)
-    (when (timerp line-reminder--thumbnail-timer)
-      (cancel-timer line-reminder--thumbnail-timer))
+    (line-reminder--stop-thumb-timer)
     (setq line-reminder--thumbnail-timer
           (run-with-idle-timer line-reminder-thumbnail-delay nil
                                #'line-reminder--show-thumb (or window (selected-window))))))
