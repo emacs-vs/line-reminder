@@ -33,6 +33,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 
 (require 'fringe-helper)
 (require 'ht)
@@ -143,6 +144,9 @@
   :type 'list
   :group 'line-reminder)
 
+(defvar-local line-reminder--line-status (ht-create)
+  "Reocrd modified/saved lines' status in hash-table")
+
 (defvar-local line-reminder--change-lines (ht-create)
   "List of line that change in current temp buffer.")
 
@@ -221,6 +225,16 @@ This function uses `string-match-p'."
     (`line-reminder-modified-sign-thumb-face line-reminder-modified-sign-thumb-priority)
     (`line-reminder-saved-sign-thumb-face line-reminder-saved-sign-thumb-priority)))
 
+(defun line-reminder--get-face (sign)
+  "Return face by SIGN."
+  (cond ((numberp sign)
+         (when-let ((sign (ht-get line-reminder--line-status sign)))
+           (line-reminder--get-face sign)))
+        (t
+         (cl-case sign
+           (`modified 'line-reminder-modified-sign-face)
+           (`saved 'line-reminder-saved-sign-face)))))
+
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
   (let ((inhibit-message t) (message-log-max nil))
@@ -269,15 +283,13 @@ This function uses `string-match-p'."
 
 (defun line-reminder--add-line-to-change-line (line)
   "Add LINE to change line list variable."
-  (push line line-reminder--change-lines)
-  (setq line-reminder--saved-lines (remove line line-reminder--saved-lines))
+  (ht-set line-reminder--line-status line 'modified)
   (when (line-reminder--use-indicators-p)
     (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face)))
 
 (defun line-reminder--remove-line-from-change-line (line)
   "Remove LINE from all line lists variable."
-  (setq line-reminder--change-lines (remove line line-reminder--change-lines)
-        line-reminder--saved-lines (remove line line-reminder--saved-lines))
+  (ht-remove line-reminder--line-status line)
   (when (line-reminder--use-indicators-p)
     (line-reminder--ind-remove-indicator-at-line line)))
 
@@ -320,15 +332,13 @@ LINE : pass in by `linum-format' variable."
   (let ((reminder-sign "") (result-sign "")
         (normal-sign (line-reminder--propertized-sign-by-type 'normal line))
         is-sign-exists)
-    (cond
-     ;; NOTE: Check if change lines list.
-     ((memq line line-reminder--change-lines)
-      (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified)
-            is-sign-exists t))
-     ;; NOTE: Check if saved lines list.
-     ((memq line line-reminder--saved-lines)
-      (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved)
-            is-sign-exists t)))
+    (cl-case (ht-get line-reminder--line-status line)
+      (`modified
+       (setq reminder-sign (line-reminder--propertized-sign-by-type 'modified)
+             is-sign-exists t))
+      (`saved
+       (setq reminder-sign (line-reminder--propertized-sign-by-type 'saved)
+             is-sign-exists t)))
 
     ;; If the sign exist, then remove the last character from the normal sign.
     ;; So we can keep our the margin/padding the same without modifing the
@@ -393,8 +403,7 @@ LINE : pass in by `linum-format' variable."
 (defun line-reminder-clear-reminder-lines-sign ()
   "Clear all the reminder lines' sign."
   (interactive)
-  (setq line-reminder--change-lines (ht-clear)
-        line-reminder--saved-lines (ht-clear))
+  (ht-clear line-reminder--line-status)
   (line-reminder--ind-clear-indicators-absolute)
   (line-reminder--delete-thumb-overlays))
 
@@ -408,32 +417,24 @@ Arguments BEG and END are passed in by before/after change functions."
        (not (memq this-command line-reminder-disable-commands))
        (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
-(defun line-reminder--shift-all-lines-list (in-list start delta)
-  "Shift all lines from IN-LIST by from START line with DELTA lines value."
-  (let ((index 0))
-    (dolist (tmp-linum in-list)
-      (when (< start tmp-linum)
-        (setf (nth index in-list) (+ tmp-linum delta)))
-      (setq index (1+ index))))
-  in-list)
-
 (defun line-reminder--shift-all-lines (start delta)
   "Shift all `change` and `saved` lines by from START line with DELTA lines value."
-  (setq line-reminder--change-lines
-        (line-reminder--shift-all-lines-list line-reminder--change-lines start delta))
-  (setq line-reminder--saved-lines
-        (line-reminder--shift-all-lines-list line-reminder--saved-lines start delta)))
+  (let ((new-ht (ht-create)))
+    (ht-map (lambda (line value)
+              (if (< start line)
+                  (ht-set new-ht (+ line delta) value)
+                (ht-set new-ht line value)))
+            line-reminder--line-status)
+    (setq line-reminder--line-status new-ht)))  ; update
 
 (defun line-reminder--remove-lines-out-range ()
   "Remove all the line in the list that are above the last/maxinum line \
 or less than zero line in current buffer."
-  (let ((last-line-in-buffer line-reminder--cache-max-line)
-        (check-lst (append line-reminder--change-lines line-reminder--saved-lines)))
-    (dolist (line check-lst)
-      ;; If is larger than last/max line in buffer.
-      (when (or (< last-line-in-buffer line) (<= line 0))
-        ;; Remove line because we are deleting.
-        (line-reminder--remove-line-from-change-line line)))))
+  (let ((max-line line-reminder--cache-max-line))
+    (ht-map (lambda (line _value)
+              (when (or (< max-line line) (<= line 0))
+                (line-reminder--remove-line-from-change-line line)))
+            line-reminder--line-status)))
 
 (defun line-reminder--remove-lines (beg end comm-or-uncomm-p)
   "Remove lines from BEG to END depends on COMM-OR-UNCOMM-P."
@@ -457,12 +458,11 @@ or less than zero line in current buffer."
 (defun line-reminder-transfer-to-saved-lines ()
   "Transfer the `change-lines' to `saved-lines'."
   (interactive)
-  (setq line-reminder--saved-lines
-        (append line-reminder--saved-lines line-reminder--change-lines))
-  ;; Clear the change lines.
-  (setq line-reminder--change-lines nil)
+  (ht-map
+   (lambda (line _value)
+     (ht-set line-reminder--line-status line 'saved))  ; convert to saved
+   line-reminder--line-status)
 
-  (delete-dups line-reminder--saved-lines)  ; Removed save duplicates
   (line-reminder--remove-lines-out-range)  ; Remove out range.
 
   (line-reminder--mark-buffer))
@@ -476,10 +476,10 @@ or less than zero line in current buffer."
   (when (line-reminder--use-indicators-p)
     (save-excursion
       (line-reminder--ind-clear-indicators-absolute)
-      (dolist (line line-reminder--change-lines)
-        (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face))
-      (dolist (line line-reminder--saved-lines)
-        (line-reminder--mark-line-by-linum line 'line-reminder-saved-sign-face))
+      (ht-map
+       (lambda (line sign)
+         (line-reminder--mark-line-by-linum line (line-reminder--get-face sign)))
+       line-reminder--line-status)
       (line-reminder--start-show-thumb))))
 
 (defun line-reminder--before-change-functions (beg end)
@@ -581,8 +581,7 @@ or less than zero line in current buffer."
 (defun line-reminder--post-command ()
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
-    (setq line-reminder--change-lines nil
-          line-reminder--saved-lines nil)
+    (ht-clear line-reminder--line-status)
     (line-reminder--ind-clear-indicators-absolute)))
 
 ;;
