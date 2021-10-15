@@ -7,7 +7,7 @@
 ;; Description: Line annotation for changed and saved lines.
 ;; Keyword: annotation line number linum reminder highlight display
 ;; Version: 0.5.0
-;; Package-Requires: ((emacs "24.4") (indicators "0.0.4") (fringe-helper "1.0.1") (ht "2.0"))
+;; Package-Requires: ((emacs "25.1") (indicators "0.0.4") (fringe-helper "1.0.1") (ht "2.0"))
 ;; URL: https://github.com/emacs-vs/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
@@ -222,7 +222,7 @@ This function uses `string-match-p'."
 (defun line-reminder--get-face (sign &optional thumbnail)
   "Return face by SIGN.
 
-If optional argument thumbnail is non-nil, return in thumbnail faces."
+If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
   (cond ((numberp sign)
          (when-let ((sign (ht-get line-reminder--line-status sign)))
            (line-reminder--get-face sign thumbnail)))
