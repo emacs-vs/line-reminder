@@ -203,7 +203,7 @@
 This function uses `string-match-p'."
   (cl-some (lambda (elm) (string-match-p elm in-str)) in-list))
 
-(defun line-reminder--get-sign (face)
+(defun line-reminder--get-string-sign (face)
   "Return string sign priority by FACE."
   (cl-case face
     (`line-reminder-modified-sign-face line-reminder-modified-sign)
@@ -234,6 +234,18 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
          (cl-case sign
            (`modified 'line-reminder-modified-sign-face)
            (`saved 'line-reminder-saved-sign-face)))))
+
+(defun line-reminder--get-sign (line)
+  "Return sign symbol by LINE."
+  (ht-get line-reminder--line-status line))
+
+(defun line-reminder--modified-p (line)
+  "Return non-nil if LINE is marked as modified."
+  (eq (line-reminder--get-sign line) 'modified))
+
+(defun line-reminder--saved-p (line)
+  "Return non-nil if LINE is marked as saved."
+  (eq (line-reminder--get-sign line) 'saved))
 
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
@@ -282,13 +294,13 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
       (remove-overlays start-pt end-pt 'ind-indicator-absolute t))))
 
 (defun line-reminder--add-line-to-change-line (line)
-  "Add LINE to change line list variable."
+  "Add LINE with `modified' flag."
   (ht-set line-reminder--line-status line 'modified)
   (when (line-reminder--use-indicators-p)
     (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face)))
 
 (defun line-reminder--remove-line-from-change-line (line)
-  "Remove LINE from all line lists variable."
+  "Remove LINE from status."
   (ht-remove line-reminder--line-status line)
   (when (line-reminder--use-indicators-p)
     (line-reminder--ind-remove-indicator-at-line line)))
@@ -422,8 +434,7 @@ Arguments BEG and END are passed in by before/after change functions."
     (setq line-reminder--line-status new-ht)))  ; update
 
 (defun line-reminder--remove-lines-out-range ()
-  "Remove all the line in the list that are above the last/maxinum line \
-or less than zero line in current buffer."
+  "Remove all lines outside of buffer."
   (let ((max-line line-reminder--cache-max-line))
     (ht-map (lambda (line _value)
               (when (or (< max-line line) (<= line 0))
@@ -633,7 +644,7 @@ or less than zero line in current buffer."
 (defun line-reminder--create-thumb-tty-overlay (face)
   "Create single tty thumbnail overlay with FACE."
   (let* ((left-or-right (line-reminder--oppose-fringe line-reminder-fringe-placed))
-         (msg (line-reminder--get-sign face))
+         (msg (line-reminder--get-string-sign face))
          (len (length msg))
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,left-or-right 2)))
