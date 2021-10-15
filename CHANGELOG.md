@@ -10,6 +10,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 * Limit feature undone changes to only valid buffer, unlike `*scratch*` buffer.
 * Added thumbnail support on the opposing fringe.
+* Use `hash-table` instead of list to improve performance.
 
 ## 0.5.0
 > Released May 28, 2021
