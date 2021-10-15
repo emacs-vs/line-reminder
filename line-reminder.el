@@ -354,6 +354,7 @@ LINE : pass in by `linum-format' variable."
      (setq-local linum-format 'line-reminder--linum-format))
     (indicators
      (require 'indicators)))
+  (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
