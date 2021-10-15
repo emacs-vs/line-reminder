@@ -7,7 +7,7 @@
 ;; Description: Line annotation for changed and saved lines.
 ;; Keyword: annotation line number linum reminder highlight display
 ;; Version: 0.5.0
-;; Package-Requires: ((emacs "24.4") (indicators "0.0.4") (fringe-helper "1.0.1"))
+;; Package-Requires: ((emacs "24.4") (indicators "0.0.4") (fringe-helper "1.0.1") (ht "2.0"))
 ;; URL: https://github.com/emacs-vs/line-reminder
 
 ;; This file is NOT part of GNU Emacs.
@@ -33,7 +33,9 @@
 ;;; Code:
 
 (require 'cl-lib)
+
 (require 'fringe-helper)
+(require 'ht)
 
 (defgroup line-reminder nil
   "Line annotation for changed and saved lines."
@@ -141,10 +143,10 @@
   :type 'list
   :group 'line-reminder)
 
-(defvar-local line-reminder--change-lines '()
+(defvar-local line-reminder--change-lines (ht-create)
   "List of line that change in current temp buffer.")
 
-(defvar-local line-reminder--saved-lines '()
+(defvar-local line-reminder--saved-lines (ht-create)
   "List of line that saved in current temp buffer.")
 
 (defvar-local line-reminder--before-max-pt -1
@@ -391,8 +393,8 @@ LINE : pass in by `linum-format' variable."
 (defun line-reminder-clear-reminder-lines-sign ()
   "Clear all the reminder lines' sign."
   (interactive)
-  (setq line-reminder--change-lines nil
-        line-reminder--saved-lines nil)
+  (setq line-reminder--change-lines (ht-clear)
+        line-reminder--saved-lines (ht-clear))
   (line-reminder--ind-clear-indicators-absolute)
   (line-reminder--delete-thumb-overlays))
 
@@ -545,9 +547,6 @@ or less than zero line in current buffer."
         (when adding-p
           (line-reminder--shift-all-lines starting-line delta-lines)
           (line-reminder--add-lines begin-linum end-linum))
-
-        (delete-dups line-reminder--change-lines)
-        (delete-dups line-reminder--saved-lines)
 
         ;; Remove out range.
         (line-reminder--remove-lines-out-range)
