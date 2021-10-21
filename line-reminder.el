@@ -681,29 +681,30 @@ Arguments BEG and END are passed in by before/after change functions."
 
 (defun line-reminder--show-thumb (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
-  (with-selected-window window
-    (when line-reminder--cache-max-line
-      (let ((window-lines (float (line-reminder--window-height)))
-            (buffer-lines (float line-reminder--cache-max-line))
-            (guard (ht-create)) added
-            percent-line face)
-        (when (< window-lines buffer-lines)
-          (save-excursion
-            (ht-map
-             (lambda (line sign)
-               (setq face (line-reminder--get-face sign t)
-                     percent-line (* (/ line buffer-lines) window-lines)
-                     percent-line (floor percent-line)
-                     added (ht-get guard percent-line))
-               ;; Prevent creating overlay twice on the same line
-               (when (or (null added)
-                         ;; 'saved line can overwrite 'modified line
-                         (eq added 'modified))
-                 (move-to-window-line 0)
-                 (when (= (vertical-motion percent-line) percent-line)
-                   (ht-set guard percent-line sign)
-                   (line-reminder--create-thumb-overlay face))))
-             line-reminder--line-status)))))))
+  (when (window-live-p window)
+    (with-selected-window window
+      (when line-reminder--cache-max-line
+        (let ((window-lines (float (line-reminder--window-height)))
+              (buffer-lines (float line-reminder--cache-max-line))
+              (guard (ht-create)) added
+              percent-line face)
+          (when (< window-lines buffer-lines)
+            (save-excursion
+              (ht-map
+               (lambda (line sign)
+                 (setq face (line-reminder--get-face sign t)
+                       percent-line (* (/ line buffer-lines) window-lines)
+                       percent-line (floor percent-line)
+                       added (ht-get guard percent-line))
+                 ;; Prevent creating overlay twice on the same line
+                 (when (or (null added)
+                           ;; 'saved line can overwrite 'modified line
+                           (eq added 'modified))
+                   (move-to-window-line 0)
+                   (when (= (vertical-motion percent-line) percent-line)
+                     (ht-set guard percent-line sign)
+                     (line-reminder--create-thumb-overlay face))))
+               line-reminder--line-status))))))))
 
 (defvar-local line-reminder--thumbnail-timer nil
   "Timer to show thumbnail.")
