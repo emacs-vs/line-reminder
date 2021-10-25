@@ -682,12 +682,18 @@ Arguments BEG and END are passed in by before/after change functions."
   (when (window-live-p window)
     (with-selected-window window
       (when line-reminder--cache-max-line
-        (let ((window-lines (float (line-reminder--window-height)))
+        (let ((inhibit-redisplay t)
+              (window-scroll-functions nil)
+              (window-configuration-change-hook nil)
+              (buffer-list-update-hook nil)
+              (window-lines (float (line-reminder--window-height)))
               (buffer-lines (float line-reminder--cache-max-line))
-              (guard (ht-create)) added
+              (guard (ht-create)) added start-point
               percent-line face)
           (when (< window-lines buffer-lines)
             (save-excursion
+              (move-to-window-line 0)  ; start from 0 percent
+              (setq start-point (point))
               (ht-map
                (lambda (line sign)
                  (setq face (line-reminder--get-face sign t)
@@ -698,8 +704,8 @@ Arguments BEG and END are passed in by before/after change functions."
                  (when (or (null added)
                            ;; 'saved line can overwrite 'modified line
                            (eq added 'modified))
-                   (move-to-window-line 0)
-                   (when (= (vertical-motion percent-line) percent-line)
+                   (goto-char start-point)
+                   (when (= (forward-line percent-line) 0)
                      (ht-set guard percent-line sign)
                      (line-reminder--create-thumb-overlay face))))
                line-reminder--line-status))))))))
