@@ -624,7 +624,7 @@ Arguments BEG and END are passed in by before/after change functions."
   "Modifed sign face."
   :group 'line-reminder)
 
-(defvar-local line-reminder--thumbnail-overlays nil
+(defvar-local line-reminder--thumb-overlays nil
   "Overlays indicate thumbnail.")
 
 (defun line-reminder--oppose-fringe (fringe)
@@ -652,9 +652,7 @@ Arguments BEG and END are passed in by before/after change functions."
          (overlay (make-overlay (line-beginning-position) (line-end-position))))
     (put-text-property 0 1 'cursor t after-string)
     (overlay-put overlay 'after-string after-string)
-    (overlay-put overlay 'window (selected-window))
     (overlay-put overlay 'priority (line-reminder--get-priority face))
-    (push overlay line-reminder--thumbnail-overlays)
     overlay))
 
 (defun line-reminder--create-thumb-fringe-overlay (face)
@@ -669,15 +667,15 @@ Arguments BEG and END are passed in by before/after change functions."
          (overlay (make-overlay pos pos)))
     (overlay-put overlay 'after-string after-string)
     (overlay-put overlay 'fringe-helper t)
-    (overlay-put overlay 'window (selected-window))
     (overlay-put overlay 'priority (line-reminder--get-priority face))
-    (push overlay line-reminder--thumbnail-overlays)
     overlay))
 
 (defun line-reminder--create-thumb-overlay (face)
   "Create single thumbnail overlay with FACE."
-  (if (display-graphic-p) (line-reminder--create-thumb-fringe-overlay face)
-    (line-reminder--create-thumb-tty-overlay face)))
+  (let ((overlay (if (display-graphic-p)
+                     (line-reminder--create-thumb-fringe-overlay face)
+                   (line-reminder--create-thumb-tty-overlay face))))
+    (push overlay line-reminder--thumb-overlays)))
 
 (defun line-reminder--show-thumb (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
@@ -706,28 +704,28 @@ Arguments BEG and END are passed in by before/after change functions."
                      (line-reminder--create-thumb-overlay face))))
                line-reminder--line-status))))))))
 
-(defvar-local line-reminder--thumbnail-timer nil
+(defvar-local line-reminder--thumb-timer nil
   "Timer to show thumbnail.")
 
 (defun line-reminder--stop-thumb-timer ()
   "Stop thumbnail timer."
-  (when (timerp line-reminder--thumbnail-timer)
-    (cancel-timer line-reminder--thumbnail-timer)))
+  (when (timerp line-reminder--thumb-timer)
+    (cancel-timer line-reminder--thumb-timer)))
 
 (defun line-reminder--start-show-thumb (&optional window &rest _)
   "Start show thumbnail timer in WINDOW."
   (when line-reminder-thumbnail
     (line-reminder--delete-thumb-overlays)
     (line-reminder--stop-thumb-timer)
-    (setq line-reminder--thumbnail-timer
+    (setq line-reminder--thumb-timer
           (run-with-idle-timer line-reminder-thumbnail-delay nil
                                #'line-reminder--show-thumb (or window (selected-window))))))
 
 (defun line-reminder--delete-thumb-overlays ()
   "Delete overlays of thumbnail."
-  (when line-reminder--thumbnail-overlays
-    (mapc 'delete-overlay line-reminder--thumbnail-overlays)
-    (setq line-reminder--thumbnail-overlays nil)))
+  (when line-reminder--thumb-overlays
+    (mapc 'delete-overlay line-reminder--thumb-overlays)
+    (setq line-reminder--thumb-overlays nil)))
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
