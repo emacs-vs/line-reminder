@@ -361,10 +361,10 @@ LINE : pass in by `linum-format' variable."
 (defun line-reminder--enable ()
   "Enable `line-reminder' in current buffer."
   (cl-case line-reminder-show-option
-    (linum
+    (`linum
      (require 'linum)
      (setq-local linum-format 'line-reminder--linum-format))
-    (indicators
+    (`indicators
      (require 'indicators)))
   (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
