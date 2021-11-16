@@ -367,8 +367,8 @@ LINE : pass in by `linum-format' variable."
     (`indicators
      (require 'indicators)))
   (ht-clear line-reminder--line-status)
-  (add-hook 'before-change-functions #'line-reminder--before-change-functions nil t)
-  (add-hook 'after-change-functions #'line-reminder--after-change-functions nil t)
+  (add-hook 'before-change-functions #'line-reminder--before-change nil t)
+  (add-hook 'after-change-functions #'line-reminder--after-change nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   (advice-add 'save-buffer :after #'line-reminder--save-buffer)
   (add-hook 'window-scroll-functions #'line-reminder--start-show-thumb nil t)
@@ -376,8 +376,8 @@ LINE : pass in by `linum-format' variable."
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
-  (remove-hook 'before-change-functions #'line-reminder--before-change-functions t)
-  (remove-hook 'after-change-functions #'line-reminder--after-change-functions t)
+  (remove-hook 'before-change-functions #'line-reminder--before-change t)
+  (remove-hook 'after-change-functions #'line-reminder--after-change t)
   (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (advice-remove 'save-buffer #'line-reminder--save-buffer)
   (line-reminder-clear-reminder-lines-sign)
@@ -487,7 +487,7 @@ Arguments BEG and END are passed in by before/after change functions."
        line-reminder--line-status)
       (line-reminder--start-show-thumb))))
 
-(defun line-reminder--before-change-functions (beg end)
+(defun line-reminder--before-change (beg end)
   "Do stuff before buffer is changed with BEG and END."
   (when (line-reminder--is-valid-situation-p beg end)
     ;; If buffer consider virtual buffer like `*scratch*`, then always
@@ -495,13 +495,13 @@ Arguments BEG and END are passed in by before/after change functions."
     (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress))
     (line-reminder--ind-delete-dups)
     (setq line-reminder--before-max-pt (point-max)
-          line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max)))
-    (setq line-reminder--before-begin-pt beg
-          line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg))
-    (setq line-reminder--before-end-pt end
+          line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max))
+          line-reminder--before-begin-pt beg
+          line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg)
+          line-reminder--before-end-pt end
           line-reminder--before-end-linum (line-reminder--line-number-at-pos end))))
 
-(defun line-reminder--after-change-functions (beg end len)
+(defun line-reminder--after-change (beg end len)
   "Do stuff after buffer is changed with BEG, END and LEN."
   (when (line-reminder--is-valid-situation-p beg end)
     (save-excursion
