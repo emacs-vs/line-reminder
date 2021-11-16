@@ -413,7 +413,7 @@ LINE : pass in by `linum-format' variable."
   (line-reminder--stop-thumb-timer)
   (line-reminder--delete-thumb-overlays))
 
-(defun line-reminder--is-valid-line-reminder-situation (&optional beg end)
+(defun line-reminder--is-valid-situation-p (&optional beg end)
   "Return non-nil, if the conditions are matched.
 
 Arguments BEG and END are passed in by before/after change functions."
@@ -489,7 +489,7 @@ Arguments BEG and END are passed in by before/after change functions."
 
 (defun line-reminder--before-change-functions (beg end)
   "Do stuff before buffer is changed with BEG and END."
-  (when (line-reminder--is-valid-line-reminder-situation beg end)
+  (when (line-reminder--is-valid-situation-p beg end)
     ;; If buffer consider virtual buffer like `*scratch*`, then always
     ;; treat it as modified
     (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress))
@@ -503,7 +503,7 @@ Arguments BEG and END are passed in by before/after change functions."
 
 (defun line-reminder--after-change-functions (beg end len)
   "Do stuff after buffer is changed with BEG, END and LEN."
-  (when (line-reminder--is-valid-line-reminder-situation beg end)
+  (when (line-reminder--is-valid-situation-p beg end)
     (save-excursion
       ;; When begin and end are not the same, meaning the there is addition/deletion
       ;; happening in the current buffer.
