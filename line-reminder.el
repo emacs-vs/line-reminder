@@ -32,9 +32,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(require 'subr-x)
-
 (require 'fringe-helper)
 (require 'ht)
 
@@ -207,9 +204,14 @@
          after-focus-change-function)
      ,@body))
 
+(defun line-reminder--goto-line (line)
+  "Jump to LINE."
+  (goto-char (point-min))
+  (forward-line (1- line)))
+
 (defun line-reminder--use-indicators-p ()
-  "Return non-nil if using indicator, else return nil."
-  (equal line-reminder-show-option 'indicators))
+  "Return non-nil if using indicator."
+  (eq line-reminder-show-option 'indicators))
 
 (defun line-reminder--line-number-at-pos (&optional pos)
   "Return line number at POS with absolute as default."
@@ -253,18 +255,6 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
            (`modified 'line-reminder-modified-sign-face)
            (`saved 'line-reminder-saved-sign-face)))))
 
-(defun line-reminder--get-sign (line)
-  "Return sign symbol by LINE."
-  (ht-get line-reminder--line-status line))
-
-(defun line-reminder--modified-p (line)
-  "Return non-nil if LINE is marked as modified."
-  (eq (line-reminder--get-sign line) 'modified))
-
-(defun line-reminder--saved-p (line)
-  "Return non-nil if LINE is marked as saved."
-  (eq (line-reminder--get-sign line) 'saved))
-
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
   (line-reminder--mute-apply
@@ -272,11 +262,6 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
      line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
      :bitmap line-reminder-bitmap :face face
      :priority (line-reminder--get-priority face))))
-
-(defun line-reminder--goto-line (line)
-  "Jump to LINE."
-  (goto-char (point-min))
-  (forward-line (1- line)))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
   "Remove the indicator on LINE."
@@ -311,13 +296,13 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
         (setq ind-managed-absolute-indicators (remove ind ind-managed-absolute-indicators)))
       (remove-overlays start-pt end-pt 'ind-indicator-absolute t))))
 
-(defun line-reminder--add-line-to-change-line (line)
+(defun line-reminder--add-change-line (line)
   "Add LINE with `modified' flag."
   (ht-set line-reminder--line-status line 'modified)
   (when (line-reminder--use-indicators-p)
     (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face)))
 
-(defun line-reminder--remove-line-from-change-line (line)
+(defun line-reminder--remove-change-line (line)
   "Remove LINE from status."
   (ht-remove line-reminder--line-status line)
   (when (line-reminder--use-indicators-p)
@@ -456,7 +441,7 @@ Arguments BEG and END are passed in by before/after change functions."
   (let ((max-line line-reminder--cache-max-line))
     (ht-map (lambda (line _value)
               (when (or (< max-line line) (<= line 0))
-                (line-reminder--remove-line-from-change-line line)))
+                (line-reminder--remove-change-line line)))
             line-reminder--line-status)))
 
 (defun line-reminder--remove-lines (beg end comm-or-uncomm-p)
@@ -466,15 +451,15 @@ Arguments BEG and END are passed in by before/after change functions."
     (when comm-or-uncomm-p (setq end (1+ end)))
     (while (< cur end)
       (if comm-or-uncomm-p
-          (line-reminder--add-line-to-change-line cur)
-        (line-reminder--remove-line-from-change-line cur))
+          (line-reminder--add-change-line cur)
+        (line-reminder--remove-change-line cur))
       (setq cur (1+ cur)))))
 
 (defun line-reminder--add-lines (beg end)
   "Add lines from BEG to END."
   (let ((cur beg))
     (while (<= cur end)
-      (line-reminder--add-line-to-change-line cur)
+      (line-reminder--add-change-line cur)
       (setq cur (1+ cur)))))
 
 ;;;###autoload
@@ -553,7 +538,7 @@ Arguments BEG and END are passed in by before/after change functions."
           (unless adding-p (setq delta-lines (- 0 delta-lines))))
 
         ;; Just add the current line.
-        (line-reminder--add-line-to-change-line begin-linum)
+        (line-reminder--add-change-line begin-linum)
 
         ;; If adding line, bound is the begin line number.
         (setq starting-line begin-linum)
@@ -564,7 +549,7 @@ Arguments BEG and END are passed in by before/after change functions."
           (line-reminder--shift-all-lines starting-line delta-lines))
 
         ;; Just add the current line.
-        (line-reminder--add-line-to-change-line begin-linum)
+        (line-reminder--add-change-line begin-linum)
 
         ;; NOTE: Addition..
         (when adding-p
