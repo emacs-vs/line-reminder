@@ -487,7 +487,6 @@ Arguments BEG and END are passed in by before/after change functions."
   (when (line-reminder--is-valid-situation-p beg end)
     ;; If buffer consider virtual buffer like `*scratch*`, then always
     ;; treat it as modified
-    (jcs-print "undo-in-progress:" undo-in-progress)
     (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress))
     (line-reminder--ind-delete-dups)
     (setq line-reminder--before-max-pt (point-max)
