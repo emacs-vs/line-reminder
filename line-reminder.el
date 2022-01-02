@@ -1,6 +1,6 @@
 ;;; line-reminder.el --- Line annotation for changed and saved lines  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018-2021  Shen, Jen-Chieh
+;; Copyright (C) 2018-2022  Shen, Jen-Chieh
 ;; Created date 2018-05-25 15:10:29
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
