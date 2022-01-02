@@ -321,25 +321,17 @@ LINE : pass in by `linum-format' variable."
                       line)
               'face 'linum))
 
-(defsubst line-reminder--get-propertized-modified-sign ()
-  "Return a propertized modified sign."
-  (propertize line-reminder-modified-sign 'face 'line-reminder-modified-sign-face))
-
-(defsubst line-reminder--get-propertized-saved-sign ()
-  "Return a propertized saved sign."
-  (propertize line-reminder-saved-sign 'face 'line-reminder-saved-sign-face))
-
 (defun line-reminder--propertized-sign-by-type (type &optional line)
   "Return a propertized sign string by type.
 TYPE : type of the propertize sign you want.
 LINE : Pass is line number for normal sign."
   (cl-case type
-    (normal (if (not line)
-                (error "Normal line but with no line number pass in")
-              ;; Just return normal linum format.
-              (line-reminder--get-propertized-normal-sign line)))
-    (modified (line-reminder--get-propertized-modified-sign))
-    (saved (line-reminder--get-propertized-saved-sign))))
+    (`normal (if (not line)
+                 (error "Normal line but with no line number pass in")
+               ;; Just return normal linum format.
+               (line-reminder--get-propertized-normal-sign line)))
+    (`modified (propertize line-reminder-modified-sign 'face 'line-reminder-modified-sign-face))
+    (`saved (propertize line-reminder-saved-sign 'face 'line-reminder-saved-sign-face))))
 
 (defun line-reminder--linum-format (line)
   "Core line reminder format string logic here.
@@ -427,7 +419,7 @@ Arguments BEG and END are passed in by before/after change functions."
        (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
 (defun line-reminder--shift-all-lines (start delta)
-  "Shift all `change` and `saved` lines by from START line with DELTA lines value."
+  "Shift all `change`/`saved` lines by from START line with DELTA."
   (let ((new-ht (ht-create)))
     (ht-map (lambda (line value)
               (if (< start line)
@@ -447,7 +439,7 @@ Arguments BEG and END are passed in by before/after change functions."
 (defun line-reminder--remove-lines (beg end comm-or-uncomm-p)
   "Remove lines from BEG to END depends on COMM-OR-UNCOMM-P."
   (let ((cur beg))
-    ;; Shift one more line when commenting/uncommenting.
+    ;; Shift one more line when commenting/uncommenting
     (when comm-or-uncomm-p (setq end (1+ end)))
     (while (< cur end)
       (if comm-or-uncomm-p
@@ -466,13 +458,10 @@ Arguments BEG and END are passed in by before/after change functions."
 (defun line-reminder-transfer-to-saved-lines ()
   "Transfer the `change-lines' to `saved-lines'."
   (interactive)
-  (ht-map
-   (lambda (line _value)
-     (ht-set line-reminder--line-status line 'saved))  ; convert to saved
+  (ht-map  ; convert to saved
+   (lambda (line _value) (ht-set line-reminder--line-status line 'saved))
    line-reminder--line-status)
-
   (line-reminder--remove-lines-out-range)  ; Remove out range.
-
   (line-reminder--mark-buffer))
 
 (defun line-reminder--ind-clear-indicators-absolute ()
@@ -495,6 +484,7 @@ Arguments BEG and END are passed in by before/after change functions."
   (when (line-reminder--is-valid-situation-p beg end)
     ;; If buffer consider virtual buffer like `*scratch*`, then always
     ;; treat it as modified
+    (jcs-print "undo-in-progress:" undo-in-progress)
     (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress))
     (line-reminder--ind-delete-dups)
     (setq line-reminder--before-max-pt (point-max)
