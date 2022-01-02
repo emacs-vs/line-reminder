@@ -189,6 +189,24 @@
 ;; (@* "Util" )
 ;;
 
+(defmacro line-reminder--mute-apply (&rest body)
+  "Execute BODY without message."
+  (declare (indent 0) (debug t))
+  `(let (message-log-max)
+     (with-temp-message (or (current-message) nil)
+       (let ((inhibit-message t)) ,@body))))
+
+(defmacro line-reminder--with-no-redisplay (&rest body)
+  "Execute BODY without any redisplay execution."
+  (declare (indent 0) (debug t))
+  `(let ((inhibit-redisplay t)
+         (inhibit-modification-hooks t)
+         buffer-list-update-hook
+         display-buffer-alist
+         window-configuration-change-hook
+         after-focus-change-function)
+     ,@body))
+
 (defun line-reminder--use-indicators-p ()
   "Return non-nil if using indicator, else return nil."
   (equal line-reminder-show-option 'indicators))
@@ -249,7 +267,7 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
 
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
-  (let ((inhibit-message t) (message-log-max nil))
+  (line-reminder--mute-apply
     (ind-create-indicator-at-line
      line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
      :bitmap line-reminder-bitmap :face face
@@ -682,33 +700,30 @@ Arguments BEG and END are passed in by before/after change functions."
   (when (window-live-p window)
     (with-selected-window window
       (when line-reminder--cache-max-line
-        (let ((inhibit-redisplay t)
-              (window-scroll-functions nil)
-              (window-configuration-change-hook nil)
-              (buffer-list-update-hook nil)
-              (window-lines (float (line-reminder--window-height)))
-              (buffer-lines (float line-reminder--cache-max-line))
-              (guard (ht-create)) added start-point
-              percent-line face)
-          (when (< window-lines buffer-lines)
-            (save-excursion
-              (move-to-window-line 0)  ; start from 0 percent
-              (setq start-point (point))
-              (ht-map
-               (lambda (line sign)
-                 (setq face (line-reminder--get-face sign t)
-                       percent-line (* (/ line buffer-lines) window-lines)
-                       percent-line (floor percent-line)
-                       added (ht-get guard percent-line))
-                 ;; Prevent creating overlay twice on the same line
-                 (when (or (null added)
-                           ;; 'saved line can overwrite 'modified line
-                           (eq added 'modified))
-                   (goto-char start-point)
-                   (when (= (forward-line percent-line) 0)
-                     (ht-set guard percent-line sign)
-                     (line-reminder--create-thumb-overlay face))))
-               line-reminder--line-status))))))))
+        (line-reminder--with-no-redisplay
+          (let ((window-lines (float (line-reminder--window-height)))
+                (buffer-lines (float line-reminder--cache-max-line))
+                (guard (ht-create)) added start-point
+                percent-line face)
+            (when (< window-lines buffer-lines)
+              (save-excursion
+                (move-to-window-line 0)  ; start from 0 percent
+                (setq start-point (point))
+                (ht-map
+                 (lambda (line sign)
+                   (setq face (line-reminder--get-face sign t)
+                         percent-line (* (/ line buffer-lines) window-lines)
+                         percent-line (floor percent-line)
+                         added (ht-get guard percent-line))
+                   ;; Prevent creating overlay twice on the same line
+                   (when (or (null added)
+                             ;; 'saved line can overwrite 'modified line
+                             (eq added 'modified))
+                     (goto-char start-point)
+                     (when (= (forward-line percent-line) 0)
+                       (ht-set guard percent-line sign)
+                       (line-reminder--create-thumb-overlay face))))
+                 line-reminder--line-status)))))))))
 
 (defvar-local line-reminder--thumb-timer nil
   "Timer to show thumbnail.")
