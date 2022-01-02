@@ -27,11 +27,11 @@ Or you can just enable in specific buffer you want.
 
 ## ❗ Display Annotation
 
-You can either set `line-reminder-show-option` to `linum` or `indicators` like
-the following snippet below.
+You can either set `line-reminder-show-option` to `linum` or `fringe` like
+the following snippet under.
 
 ```el
-(setq line-reminder-show-option 'linum)  ; Or set to 'indicators
+(setq line-reminder-show-option 'linum)  ; Or set to 'fringe
 ```
 
 Change display symbol: (Default to `"▐"`)
@@ -56,7 +56,7 @@ Customize format for how line annotation is displayed.
 (setq line-reminder-linum-format "%s ")
 ```
 
-### 💥 Using `indicators`
+### 💥 Using `fringe`
 
 Customize the symbol of the fringe: (Default to `'line-reminder--default-bitmap`)
 
