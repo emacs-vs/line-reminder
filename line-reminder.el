@@ -32,6 +32,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'subr-x)
+
 (require 'fringe-helper)
 (require 'ht)
 
