@@ -433,9 +433,9 @@ Arguments BEG and END are passed in by before/after change functions."
 
 (defun line-reminder--remove-lines-out-range ()
   "Remove all lines outside of buffer."
-  (let ((max-line line-reminder--cache-max-line))
+  (when line-reminder--cache-max-line
     (ht-map (lambda (line _value)
-              (when (or (< max-line line) (<= line 0))
+              (when (or (< line-reminder--cache-max-line line) (<= line 0))
                 (line-reminder--remove-change-line line)))
             line-reminder--line-status)))
 
