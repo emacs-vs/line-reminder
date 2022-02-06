@@ -341,15 +341,14 @@ LINE : Pass is line number for normal sign."
 LINE : pass in by `linum-format' variable."
   (let ((sign (ht-get line-reminder--line-status line))
         (normal-sign (line-reminder--propertized-sign-by-type 'normal line))
-        (reminder-sign ""))
+        reminder-sign)
     (when sign
       (setq reminder-sign (line-reminder--propertized-sign-by-type sign)
             ;; If the sign exist, then remove the last character from the normal
             ;; sign. So we can keep our the margin/padding the same without
             ;; modifing the margin/padding width.
             normal-sign (substring normal-sign 0 (1- (length normal-sign)))))
-
-    ;; Combnie the result format.
+    ;; Combnie the result format
     (concat normal-sign reminder-sign)))
 
 ;;
