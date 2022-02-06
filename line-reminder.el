@@ -443,19 +443,19 @@ Arguments BEG and END are passed in by before/after change functions."
   "Remove lines from BEG to END depends on COMM-OR-UNCOMM-P."
   (let ((cur beg))
     ;; Shift one more line when commenting/uncommenting
-    (when comm-or-uncomm-p (setq end (1+ end)))
+    (when comm-or-uncomm-p (cl-incf end))
     (while (< cur end)
       (if comm-or-uncomm-p
           (line-reminder--add-change-line cur)
         (line-reminder--remove-change-line cur))
-      (setq cur (1+ cur)))))
+      (cl-incf cur))))
 
 (defun line-reminder--add-lines (beg end)
   "Add lines from BEG to END."
   (let ((cur beg))
     (while (<= cur end)
       (line-reminder--add-change-line cur)
-      (setq cur (1+ cur)))))
+      (cl-incf cur))))
 
 ;;;###autoload
 (defun line-reminder-transfer-to-saved-lines ()
@@ -499,60 +499,51 @@ Arguments BEG and END are passed in by before/after change functions."
 (defun line-reminder--after-change (beg end len)
   "Do stuff after buffer is changed with BEG, END and LEN."
   (when (line-reminder--is-valid-situation-p beg end)
-    (save-excursion
-      ;; When begin and end are not the same, meaning the there is addition/deletion
-      ;; happening in the current buffer.
-      (let ((begin-linum -1) (end-linum -1) (delta-lines 0)
-            (starting-line -1)  ; Starting line for shift
-            (adding-p (< (+ beg len) end))
-            ;; Flag to check if currently commenting or uncommenting.
-            (comm-or-uncomm-p (and (not (= len 0)) (not (= beg end)))))
-        (if (or adding-p comm-or-uncomm-p)
-            (setq line-reminder--before-max-pt (+ line-reminder--before-max-pt (- end beg)))
-          (setq line-reminder--before-max-pt (- line-reminder--before-max-pt len)))
+    ;; When begin and end are not the same, meaning the there is addition/deletion
+    ;; happening in the current buffer.
+    (let ((adding-p (< (+ beg len) end))
+          begin-linum end-linum delta-lines
+          starting-line  ; Starting line for shift
+          ;; Flag to check if currently commenting or uncommenting
+          (comm-or-uncomm-p (and (not (= len 0)) (not (= beg end)))))
+      (setq line-reminder--before-max-pt
+            (if (or adding-p comm-or-uncomm-p)
+                (+ line-reminder--before-max-pt (- end beg))
+              (- line-reminder--before-max-pt len)))
 
-        (setq line-reminder--cache-max-line
-              (line-reminder--line-number-at-pos line-reminder--before-max-pt))
+      (setq line-reminder--cache-max-line
+            (line-reminder--line-number-at-pos line-reminder--before-max-pt))
 
-        (if adding-p
-            (setq end-linum (line-reminder--line-number-at-pos end)
-                  begin-linum (line-reminder--line-number-at-pos beg))
-          (setq beg line-reminder--before-begin-pt
-                end line-reminder--before-end-pt
-                begin-linum line-reminder--before-begin-linum
-                end-linum line-reminder--before-end-linum))
+      (if adding-p
+          (setq end-linum (line-reminder--line-number-at-pos end)
+                begin-linum (line-reminder--line-number-at-pos beg))
+        (setq beg line-reminder--before-begin-pt
+              end line-reminder--before-end-pt
+              begin-linum line-reminder--before-begin-linum
+              end-linum line-reminder--before-end-linum))
 
-        (goto-char beg)
+      (if comm-or-uncomm-p
+          (setq delta-lines (- line-reminder--cache-max-line line-reminder--before-max-linum))
+        (setq delta-lines (- end-linum begin-linum))
+        (unless adding-p (setq delta-lines (- 0 delta-lines))))
 
-        (if comm-or-uncomm-p
-            (setq delta-lines (- line-reminder--cache-max-line line-reminder--before-max-linum))
-          (setq delta-lines (- end-linum begin-linum))
-          (unless adding-p (setq delta-lines (- 0 delta-lines))))
+      (line-reminder--add-change-line begin-linum)  ; Just add the current line
+      ;; If adding line, bound is the begin line number
+      (setq starting-line begin-linum)
 
-        ;; Just add the current line.
-        (line-reminder--add-change-line begin-linum)
+      ;; NOTE: Deletion..
+      (unless adding-p
+        (line-reminder--remove-lines begin-linum end-linum comm-or-uncomm-p)
+        (line-reminder--shift-all-lines starting-line delta-lines))
 
-        ;; If adding line, bound is the begin line number.
-        (setq starting-line begin-linum)
+      (line-reminder--add-change-line begin-linum)  ; Just add the current line
 
-        ;; NOTE: Deletion..
-        (unless adding-p
-          (line-reminder--remove-lines begin-linum end-linum comm-or-uncomm-p)
-          (line-reminder--shift-all-lines starting-line delta-lines))
-
-        ;; Just add the current line.
-        (line-reminder--add-change-line begin-linum)
-
-        ;; NOTE: Addition..
-        (when adding-p
-          (line-reminder--shift-all-lines starting-line delta-lines)
-          (line-reminder--add-lines begin-linum end-linum))
-
-        ;; Remove out range.
-        (line-reminder--remove-lines-out-range)
-
-        ;; Display thumbnail
-        (line-reminder--start-show-thumb)))))
+      ;; NOTE: Addition..
+      (when adding-p
+        (line-reminder--shift-all-lines starting-line delta-lines)
+        (line-reminder--add-lines begin-linum end-linum))
+      (line-reminder--remove-lines-out-range)  ; Remove out range
+      (line-reminder--start-show-thumb))))  ; Display thumbnail
 
 ;;
 ;; (@* "Save" )
