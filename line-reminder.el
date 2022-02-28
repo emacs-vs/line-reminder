@@ -511,7 +511,8 @@ Arguments BEG and END are passed in by before/after change functions."
               (- line-reminder--before-max-pt len)))
 
       (setq line-reminder--cache-max-line
-            (line-reminder--line-number-at-pos line-reminder--before-max-pt))
+            (or (line-reminder--line-number-at-pos line-reminder--before-max-pt)
+                (line-reminder--line-number-at-pos (point-max))))
 
       (if adding-p
           (setq end-linum (line-reminder--line-number-at-pos end)
