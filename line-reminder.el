@@ -218,7 +218,7 @@
 
 (defun line-reminder--line-number-at-pos (&optional pos)
   "Return line number at POS with absolute as default."
-  (line-number-at-pos pos t))
+  (ignore-errors (line-number-at-pos pos t)))
 
 (defun line-reminder--contain-list-string-regexp (in-list in-str)
   "Return non-nil if IN-STR is listed in IN-LIST.
