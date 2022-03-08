@@ -7,9 +7,9 @@
 
 [![CI](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-vs/line-reminder/actions/workflows/test.yml)
 
-| Line Reminder in Emacs Comparison      | Visual Studio Comparison            |
-|:--------------------------------------:|:-----------------------------------:|
-|<img src="./etc/emacs-comparison.png"/> | <img src="./etc/vs-comparison.png"/>|
+| Emacs (with `line-reminder`) | Visual Studio   |
+|:----------------------------:|:---------------:|
+| ![](etc/emacs.png)           | ![](etc/vs.png) |
 
 ## 🔨 Usage
 
