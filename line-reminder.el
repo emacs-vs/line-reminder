@@ -633,7 +633,7 @@ Arguments BEG and END are passed in by before/after change functions."
     (window-height)))
 
 (defun line-reminder--thumb-create-tty-ov (face fringe priority)
-  "Create single tty thumbnail overlay with FACE in FRINGE."
+  "Create single tty thumbnail overlay with FACE in FRINGE with PRIORITY."
   (let* ((msg (line-reminder--get-string-sign face))
          (len (length msg))
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
@@ -649,7 +649,7 @@ Arguments BEG and END are passed in by before/after change functions."
     overlay))
 
 (defun line-reminder--thumb-create-fringe-ov (face fringe priority)
-  "Create single fringe thumbnail overlay with FACE in FRINGE."
+  "Create single fringe thumbnail overlay with FACE in FRINGE with PRIORITY."
   (let* ((pos (point))
          ;; If `pos' is at the beginning of line, overlay of the
          ;; fringe will be on the previous visual line.
@@ -657,7 +657,7 @@ Arguments BEG and END are passed in by before/after change functions."
          (display-string `(,fringe ,line-reminder-thumbnail-bitmap ,face))
          (overlay (make-overlay pos pos)))
     (ov-set overlay
-            'after-string (propertize "." 'display display-string)
+            'after-string (propertize "" 'display display-string)
             'fringe-helper t
             'window t
             'priority priority
