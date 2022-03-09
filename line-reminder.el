@@ -413,7 +413,7 @@ LINE : pass in by `linum-format' variable."
   (ht-clear line-reminder--line-status)
   (line-reminder--ind-clear-indicators-absolute)
   (line-reminder--stop-thumb-timer)
-  (line-reminder--thumb-delete-overlays))
+  (line-reminder--thumb-delete-ovs))
 
 (defun line-reminder--is-valid-situation-p (&optional beg end)
   "Return non-nil, if the conditions are matched.
@@ -639,14 +639,14 @@ Arguments BEG and END are passed in by before/after change functions."
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,fringe 2)))
          (after-string (concat (propertize "." 'display display-string) msg))
-         (overlay (make-overlay (line-beginning-position) (line-end-position))))
+         (ov (make-overlay (line-beginning-position) (line-end-position))))
     (put-text-property 0 1 'cursor t after-string)
-    (ov-set overlay
+    (ov-set ov
             'after-string after-string
             'window t
             'priority priority
             'line-reminder-thumb t)
-    overlay))
+    ov))
 
 (defun line-reminder--thumb-create-fringe-ov (face fringe priority)
   "Create single fringe thumbnail overlay with FACE in FRINGE with PRIORITY."
@@ -655,14 +655,14 @@ Arguments BEG and END are passed in by before/after change functions."
          ;; fringe will be on the previous visual line.
          (pos (if (= (line-end-position) pos) pos (1+ pos)))
          (display-string `(,fringe ,line-reminder-thumbnail-bitmap ,face))
-         (overlay (make-overlay pos pos)))
-    (ov-set overlay
+         (ov (make-overlay pos pos)))
+    (ov-set ov
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
             'window t
             'priority priority
             'line-reminder-thumb t)
-    overlay))
+    ov))
 
 (defun line-reminder--thumb-create-ov (face)
   "Create single thumbnail overlay with FACE."
@@ -671,8 +671,8 @@ Arguments BEG and END are passed in by before/after change functions."
          (fnc (if (display-graphic-p)
                   #'line-reminder--thumb-create-fringe-ov
                 #'line-reminder--thumb-create-tty-ov))
-         (overlay (funcall fnc face fringe priority)))
-    (push overlay line-reminder--thumb-ovs)))
+         (ov (funcall fnc face fringe priority)))
+    (push ov line-reminder--thumb-ovs)))
 
 (defun line-reminder--thumb-show (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
@@ -684,6 +684,7 @@ Arguments BEG and END are passed in by before/after change functions."
                 (buffer-lines (float line-reminder--cache-max-line))
                 (guard (ht-create)) added start-point percent-line face)
             (when (< window-lines buffer-lines)
+              (jcs-print "?" window)
               (save-excursion
                 (move-to-window-line 0)  ; start from 0 percent
                 (setq start-point (point))
@@ -726,14 +727,14 @@ Arguments BEG and END are passed in by before/after change functions."
   (when line-reminder-thumbnail
     (with-selected-window window
       (when line-reminder-mode
-        (line-reminder--thumb-delete-overlays)
+        (line-reminder--thumb-delete-ovs)
         (line-reminder--stop-thumb-timer)
         (setq line-reminder--thumb-timer
               (run-with-idle-timer line-reminder-thumbnail-delay nil
                                    #'line-reminder--thumb-show window))))))
 
-(defun line-reminder--thumb-delete-overlays ()
-  "Delete overlays of thumbnail."
+(defun line-reminder--thumb-delete-ovs ()
+  "Delete thumbnail overlays."
   (when line-reminder--thumb-ovs
     (mapc 'delete-overlay line-reminder--thumb-ovs)
     (setq line-reminder--thumb-ovs nil)))
