@@ -96,8 +96,8 @@ You can change the thumbnail bitmap by: (Defaul to `line-reminder--default-thumb
 Change thumbnail display symbol: (Default to `"▐"`)
 
 ```el
-(setq line-reminder-modified-sign-thumb "▐"
-      line-reminder-saved-sign-thumb "▐")
+(setq line-reminder-thumb-modified-sign "▐"
+      line-reminder-thumb-saved-sign "▐")
 ```
 
 ## 💨 Face
