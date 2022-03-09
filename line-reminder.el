@@ -712,13 +712,13 @@ Arguments BEG and END are passed in by before/after change functions."
     (line-reminder--stop-thumb-timer)
     (setq line-reminder--thumb-timer
           (run-with-idle-timer line-reminder-thumbnail-delay nil
-                               #'line-reminder--show-thumb (or window (selected-window))))))
+                               #'line-reminder--show-thumb (or arg1 (selected-window)))))
 
-(defun line-reminder--delete-thumb-overlays ()
-  "Delete overlays of thumbnail."
-  (when line-reminder--thumb-overlays
-    (mapc 'delete-overlay line-reminder--thumb-overlays)
-    (setq line-reminder--thumb-overlays nil)))
+  (defun line-reminder--delete-thumb-overlays ()
+    "Delete overlays of thumbnail."
+    (when line-reminder--thumb-overlays
+      (mapc 'delete-overlay line-reminder--thumb-overlays)
+      (setq line-reminder--thumb-overlays nil)))
 
-(provide 'line-reminder)
+  (provide 'line-reminder)
 ;;; line-reminder.el ends here
