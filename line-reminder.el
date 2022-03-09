@@ -663,7 +663,7 @@ Arguments BEG and END are passed in by before/after change functions."
             'line-reminder-thumb t)
     overlay))
 
-(defun line-reminder--thumb-create-overlay (face)
+(defun line-reminder--thumb-create-ov (face)
   "Create single thumbnail overlay with FACE."
   (let* ((fringe (line-reminder--oppose-fringe line-reminder-fringe-placed))
          (priority (line-reminder--get-priority face))
@@ -699,7 +699,7 @@ Arguments BEG and END are passed in by before/after change functions."
                      (goto-char start-point)
                      (when (= (forward-line percent-line) 0)
                        (ht-set guard percent-line sign)
-                       (line-reminder--thumb-create-overlay face))))
+                       (line-reminder--thumb-create-ov face))))
                  line-reminder--line-status)))))))))
 
 (defvar-local line-reminder--thumb-timer nil
