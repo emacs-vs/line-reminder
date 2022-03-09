@@ -643,7 +643,8 @@ Arguments BEG and END are passed in by before/after change functions."
     (ov-set overlay
             'after-string (concat (propertize "." 'display display-string) msg)
             'window t
-            'priority priority)
+            'priority priority
+            'line-reminder-thumb t)
     overlay))
 
 (defun line-reminder--thumb-create-fringe-ov (face fringe priority)
@@ -678,7 +679,6 @@ Arguments BEG and END are passed in by before/after change functions."
     (when (window-live-p window)
       (with-selected-window window
         (when line-reminder--cache-max-line
-          ;;(jcs-print "[[[?]]]" window)
           (let ((window-lines (float (line-reminder--window-height)))
                 (buffer-lines (float line-reminder--cache-max-line))
                 (guard (ht-create)) added start-point percent-line face)
