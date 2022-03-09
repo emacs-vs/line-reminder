@@ -201,10 +201,14 @@
   (declare (indent 0) (debug t))
   `(let ((inhibit-redisplay t)
          (inhibit-modification-hooks t)
+         (inhibit-point-motion-hooks t)
+         after-focus-change-function
          buffer-list-update-hook
          display-buffer-alist
          window-configuration-change-hook
-         after-focus-change-function)
+         window-scroll-functions
+         window-size-change-functions
+         window-state-change-hook)
      ,@body))
 
 (defun line-reminder--goto-line (line)
@@ -369,7 +373,7 @@ LINE : pass in by `linum-format' variable."
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   (advice-add 'save-buffer :after #'line-reminder--save-buffer)
   (add-hook 'window-scroll-functions #'line-reminder--start-show-thumb nil t)
-  (add-hook 'window-configuration-change-hook #'line-reminder--start-show-thumb nil t))
+  (add-hook 'window-size-change-functions #'line-reminder--start-show-thumb nil t))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
@@ -379,7 +383,7 @@ LINE : pass in by `linum-format' variable."
   (advice-remove 'save-buffer #'line-reminder--save-buffer)
   (line-reminder-clear-reminder-lines-sign)
   (remove-hook 'window-scroll-functions #'line-reminder--start-show-thumb t)
-  (remove-hook 'window-configuration-change-hook #'line-reminder--start-show-thumb t))
+  (remove-hook 'window-size-change-functions #'line-reminder--start-show-thumb t))
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
