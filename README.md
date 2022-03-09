@@ -81,12 +81,6 @@ You can display thumbnail by setting:
 *P.S. fringe is oppsing from variable `line-reminder-fringe-placed`, hence it's
 default to `right-fringe`*
 
-To change display time: (Default to `0.2`)
-
-```el
-(setq line-reminder-thumbnail-delay 0.2)
-```
-
 You can change the thumbnail bitmap by: (Defaul to `line-reminder--default-thumbnail-bitmap`)
 
 ```el

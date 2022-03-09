@@ -412,7 +412,6 @@ LINE : pass in by `linum-format' variable."
   (interactive)
   (ht-clear line-reminder--line-status)
   (line-reminder--ind-clear-indicators-absolute)
-  (line-reminder--stop-thumb-timer)
   (line-reminder--thumb-delete-ovs))
 
 (defun line-reminder--is-valid-situation-p (&optional beg end)
@@ -589,11 +588,6 @@ Arguments BEG and END are passed in by before/after change functions."
   :type 'boolean
   :group 'line-reminder)
 
-(defcustom line-reminder-thumbnail-delay 0.2
-  "Delay time to display thumbnail."
-  :type 'float
-  :group 'line-reminder)
-
 (fringe-helper-define 'line-reminder--default-thumbnail-bitmap nil
   "xx...." "xx...." "xx...." "xx...." "xx...." "xx...." "xx...."
   "xx...." "xx...." "xx...." "xx...." "xx...." "xx...." "xx...."
@@ -703,14 +697,6 @@ Arguments BEG and END are passed in by before/after change functions."
                        (line-reminder--thumb-create-ov face))))
                  line-reminder--line-status)))))))))
 
-(defvar-local line-reminder--thumb-timer nil
-  "Timer to show thumbnail.")
-
-(defun line-reminder--stop-thumb-timer ()
-  "Stop thumbnail timer."
-  (when (timerp line-reminder--thumb-timer)
-    (cancel-timer line-reminder--thumb-timer)))
-
 (defun line-reminder--thumb-size-change (&rest _)
   "Render thumbnail for all visible windows."
   (line-reminder--with-no-redisplay
@@ -727,10 +713,7 @@ Arguments BEG and END are passed in by before/after change functions."
     (with-selected-window window
       (when line-reminder-mode
         (line-reminder--thumb-delete-ovs)
-        (line-reminder--stop-thumb-timer)
-        (setq line-reminder--thumb-timer
-              (run-with-idle-timer line-reminder-thumbnail-delay nil
-                                   #'line-reminder--thumb-show window))))))
+        (line-reminder--thumb-show window)))))
 
 (defun line-reminder--thumb-delete-ovs ()
   "Delete thumbnail overlays."
