@@ -145,7 +145,7 @@
   :group 'line-reminder)
 
 (defvar-local line-reminder--line-status (ht-create)
-  "Reocrd modified/saved lines' status in hash-table")
+  "Reocrd modified/saved lines' status in hash-table.")
 
 (defvar-local line-reminder--before-max-pt -1
   "Record down the point max for out of range calculation.")
