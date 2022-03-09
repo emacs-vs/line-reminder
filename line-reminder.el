@@ -638,10 +638,11 @@ Arguments BEG and END are passed in by before/after change functions."
          (len (length msg))
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,fringe 2)))
+         (after-string (concat (propertize "." 'display display-string) msg))
          (overlay (make-overlay (line-beginning-position) (line-end-position))))
     (put-text-property 0 1 'cursor t after-string)
     (ov-set overlay
-            'after-string (concat (propertize "." 'display display-string) msg)
+            'after-string after-string
             'window t
             'priority priority
             'line-reminder-thumb t)
