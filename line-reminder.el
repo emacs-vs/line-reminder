@@ -657,7 +657,7 @@ Arguments BEG and END are passed in by before/after change functions."
          (display-string `(,fringe ,line-reminder-thumbnail-bitmap ,face))
          (overlay (make-overlay pos pos)))
     (ov-set overlay
-            'after-string (propertize "" 'display display-string)
+            'after-string (propertize "." 'display display-string)
             'fringe-helper t
             'window t
             'priority priority
