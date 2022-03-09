@@ -8,7 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.5.2 (Unreleased)
 > Released N/A
 
-* N/A
+* Use windows size changed hook instead of configuration hook. (f34db57ae66fe95e502fcf8cd1da959f82bf96df)
 
 ## 0.5.1
 > Released Feb 4, 2022
