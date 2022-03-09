@@ -684,7 +684,6 @@ Arguments BEG and END are passed in by before/after change functions."
                 (buffer-lines (float line-reminder--cache-max-line))
                 (guard (ht-create)) added start-point percent-line face)
             (when (< window-lines buffer-lines)
-              (jcs-print "?" window)
               (save-excursion
                 (move-to-window-line 0)  ; start from 0 percent
                 (setq start-point (point))
