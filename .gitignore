@@ -1,13 +1,14 @@
 # ignore these directories
 /.git
 /recipes
-/test
-line-reminder-pkg.el
 
 # ignore generated files
 *.elc
 
-# ignore video
-/video
+# eask packages
+.eask/
+dist/
 
-.eask
+# packaging
+*-autoloads.el
+*-pkg.el

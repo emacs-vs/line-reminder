@@ -1,0 +1,26 @@
+# ========================================================================
+# $File: hello.txt $
+# $Date: 2018-05-27 16:47:58 $
+# $Revision: $
+# $Creator: Jen-Chieh Shen $
+# $Notice: See LICENSE.txt for modification and distribution information
+#                   Copyright © 2018 by Shen, Jen-Chieh $
+# ========================================================================
+
+
+d
+something here
+something here
+Old
+
+
+something here
+something he okay
+
+
+
+
+Okk
+
+
+Lorem Okay
