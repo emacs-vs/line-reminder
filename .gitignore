@@ -2,6 +2,7 @@
 /.git
 /recipes
 /_test
+/video
 
 # ignore generated files
 *.elc
