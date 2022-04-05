@@ -418,7 +418,8 @@ LINE : pass in by `linum-format' variable."
   "Return non-nil, if the conditions are matched.
 
 Arguments BEG and END are passed in by before/after change functions."
-  (and (not buffer-read-only)
+  (and (null inhibit-read-only)  ; avoid custom.el file
+       (not buffer-read-only)
        (not (line-reminder--contain-list-string-regexp
              line-reminder-ignore-buffer-names (buffer-name)))
        (not (memq this-command line-reminder-disable-commands))
