@@ -417,7 +417,7 @@ LINE : pass in by `linum-format' variable."
 (defun line-reminder--custom-file-saving ()
   "Return t if we are saving `custom-file'."
   (and (or print-escape-control-characters inhibit-read-only)
-       (equal (buffer-file-name) (expand-file-name custom-file))))
+       (equal (buffer-file-name) (ignore-errors (expand-file-name custom-file)))))
 
 (defun line-reminder--is-valid-situation-p (&optional beg end)
   "Return non-nil, if the conditions are matched.
