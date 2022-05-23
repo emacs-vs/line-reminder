@@ -86,22 +86,22 @@
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-modified-sign "¦"
+(defcustom line-reminder-modified-sign "▐"
   "Modified sign."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-saved-sign "¦"
+(defcustom line-reminder-saved-sign "▐"
   "Saved sign."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-thumb-modified-sign "¦"
+(defcustom line-reminder-thumb-modified-sign "▐"
   "String to display modified line thumbnail."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-thumb-saved-sign "¦"
+(defcustom line-reminder-thumb-saved-sign "▐"
   "String to display saved line thumbnail."
   :type 'string
   :group 'line-reminder)
