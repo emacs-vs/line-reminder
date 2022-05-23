@@ -86,22 +86,22 @@
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-modified-sign "▐"
+(defcustom line-reminder-modified-sign "¦"
   "Modified sign."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-saved-sign "▐"
+(defcustom line-reminder-saved-sign "¦"
   "Saved sign."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-thumb-modified-sign "▐"
+(defcustom line-reminder-thumb-modified-sign "¦"
   "String to display modified line thumbnail."
   :type 'string
   :group 'line-reminder)
 
-(defcustom line-reminder-thumb-saved-sign "▐"
+(defcustom line-reminder-thumb-saved-sign "¦"
   "String to display saved line thumbnail."
   :type 'string
   :group 'line-reminder)
@@ -414,22 +414,15 @@ LINE : pass in by `linum-format' variable."
   (line-reminder--ind-clear-indicators-absolute)
   (line-reminder--thumb-delete-ovs))
 
-(defun line-reminder--custom-file-saving ()
-  "Return t if we are saving `custom-file'."
-  (and (or print-escape-control-characters inhibit-read-only)
-       (equal (buffer-file-name) (ignore-errors (expand-file-name custom-file)))))
-
 (defun line-reminder--is-valid-situation-p (&optional beg end)
   "Return non-nil, if the conditions are matched.
 
 Arguments BEG and END are passed in by before/after change functions."
-  (and
-   (not (line-reminder--custom-file-saving))
-   (not buffer-read-only)
-   (not (line-reminder--contain-list-string-regexp
-         line-reminder-ignore-buffer-names (buffer-name)))
-   (not (memq this-command line-reminder-disable-commands))
-   (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
+  (and (not buffer-read-only)
+       (not (line-reminder--contain-list-string-regexp
+             line-reminder-ignore-buffer-names (buffer-name)))
+       (not (memq this-command line-reminder-disable-commands))
+       (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
 (defun line-reminder--shift-all-lines (start delta)
   "Shift all `change`/`saved` lines by from START line with DELTA."
