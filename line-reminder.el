@@ -4,11 +4,10 @@
 ;; Created date 2018-05-25 15:10:29
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Line annotation for changed and saved lines.
-;; Keyword: annotation line number linum reminder highlight display
+;; URL: https://github.com/emacs-vs/line-reminder
 ;; Version: 0.5.1
 ;; Package-Requires: ((emacs "25.1") (indicators "0.0.4") (fringe-helper "1.0.1") (ov "1.0.6") (ht "2.0"))
-;; URL: https://github.com/emacs-vs/line-reminder
+;; Keywords: annotation line number linum reminder highlight display
 
 ;; This file is NOT part of GNU Emacs.
 

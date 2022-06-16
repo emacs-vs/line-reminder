@@ -2,6 +2,9 @@
          "0.5.1"
          "Line annotation for changed and saved lines")
 
+(website-url "https://github.com/emacs-vs/line-reminder")
+(keywords "annotation" "line" "number" "linum" "reminder" "highlight" "display")
+
 (package-file "line-reminder.el")
 
 (source "melpa")
