@@ -7,7 +7,7 @@
 ;; URL: https://github.com/emacs-vs/line-reminder
 ;; Version: 0.5.1
 ;; Package-Requires: ((emacs "25.1") (indicators "0.0.4") (fringe-helper "1.0.1") (ov "1.0.6") (ht "2.0"))
-;; Keywords: annotation line number linum reminder highlight display
+;; Keywords: convenience annotation
 
 ;; This file is NOT part of GNU Emacs.
 
