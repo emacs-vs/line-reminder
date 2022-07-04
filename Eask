@@ -3,7 +3,7 @@
          "Line annotation for changed and saved lines")
 
 (website-url "https://github.com/emacs-vs/line-reminder")
-(keywords "annotation" "line" "number" "linum" "reminder" "highlight" "display")
+(keywords "convenience" "annotation")
 
 (package-file "line-reminder.el")
 
