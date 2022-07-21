@@ -208,7 +208,8 @@
          window-configuration-change-hook
          window-scroll-functions
          window-size-change-functions
-         window-state-change-hook)
+         window-state-change-hook
+         jit-lock-mode)
      ,@body))
 
 (defun line-reminder--goto-line (line)
