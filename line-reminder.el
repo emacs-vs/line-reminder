@@ -266,10 +266,11 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
   (line-reminder--mute-apply
-    (ind-create-indicator-at-line
-     line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
-     :bitmap line-reminder-bitmap :face face
-     :priority (line-reminder--get-priority face))))
+    (let (ind-managed-absolute-indicators)
+      (ind-create-indicator-at-line
+       line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
+       :bitmap line-reminder-bitmap :face face
+       :priority (line-reminder--get-priority face)))))
 
 (defun line-reminder--ind-remove-indicator-at-line (line)
   "Remove the indicator on LINE."
@@ -388,13 +389,13 @@ LINE : pass in by `linum-format' variable."
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
-  "Minor mode 'line-reminder-mode'."
+  "Minor mode `line-reminder-mode'."
   :lighter " LR"
   :group line-reminder
   (if line-reminder-mode (line-reminder--enable) (line-reminder--disable)))
 
 (defun line-reminder--turn-on-line-reminder-mode ()
-  "Turn on the 'line-reminder-mode'."
+  "Turn on the `line-reminder-mode'."
   (line-reminder-mode 1))
 
 ;;;###autoload
