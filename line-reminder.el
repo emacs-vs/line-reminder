@@ -266,6 +266,8 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
 (defun line-reminder--mark-line-by-linum (line face)
   "Mark the LINE by using FACE name."
   (line-reminder--mute-apply
+    ;; XXX: We set variable `ind-managed-absolute-indicators' to `nil' to
+    ;; save huge performance from function `ind-update-absolute'.
     (let (ind-managed-absolute-indicators)
       (ind-create-indicator-at-line
        line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
