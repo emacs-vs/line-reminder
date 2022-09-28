@@ -11,6 +11,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Use windows size changed hook instead of configuration hook. (f34db57ae66fe95e502fcf8cd1da959f82bf96df)
 * Remove delay to avoid `window-scroll-functions` being called repeatedly (9728edf1c0db9efcd2a92055db9bb9747c8b4bf1)
 * Avoid `Scan error: "Unbalanced parentheses"` when custom save file (121f5533038db59fdaca1b0d8da56f9b9efb296b)
+* Refactor to increase performace, for #5 (7561700e37543bc7622e41d81d5b6dd038a8efe0)
 
 ## 0.5.1
 > Released Feb 4, 2022
