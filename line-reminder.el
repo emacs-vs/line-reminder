@@ -579,7 +579,7 @@ and END."
         (line-reminder--add-lines begin-linum end-linum))
 
       (line-reminder--remove-lines-out-range)  ; Remove out range
-      (line-reminder--thumb-scroll))))  ; Display thumbnail
+      (line-reminder--thumb-render-buffer))))  ; Display thumbnail
 
 ;;
 ;; (@* "Save" )
@@ -641,7 +641,7 @@ and END."
   "Modifed sign face."
   :group 'line-reminder)
 
-(defvar-local line-reminder--thumb-ovs nil
+(defvar-local line-reminder--thumb-ovs (ht-create)
   "Overlays indicate thumbnail.")
 
 (defun line-reminder--oppose-fringe (fringe)
@@ -669,7 +669,7 @@ and END."
     (put-text-property 0 1 'cursor t after-string)
     (ov-set ov
             'after-string after-string
-            'window t
+            'window (selected-window)
             'priority priority
             'line-reminder-thumb t)
     ov))
@@ -685,7 +685,7 @@ and END."
     (ov-set ov
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
-            'window t
+            'window (selected-window)
             'priority priority
             'line-reminder-thumb t)
     ov))
@@ -697,8 +697,10 @@ and END."
          (fnc (if (display-graphic-p)
                   #'line-reminder--thumb-create-fringe-ov
                 #'line-reminder--thumb-create-tty-ov))
-         (ov (funcall fnc face fringe priority)))
-    (push ov line-reminder--thumb-ovs)))
+         (ov (funcall fnc face fringe priority))
+         (key (selected-window)))
+    (ht-set line-reminder--thumb-ovs key
+            (push ov (ht-get line-reminder--thumb-ovs key)))))
 
 (defun line-reminder--thumb-show (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
@@ -731,15 +733,20 @@ and END."
 (defun line-reminder--thumb-size-change (&rest _)
   "Render thumbnail for all visible windows."
   (line-reminder--with-no-redisplay
-    (dolist (win (window-list)) (line-reminder--thumb-render win))))
+    (dolist (win (window-list)) (line-reminder--thumb-render-window win))))
 
 (defun line-reminder--thumb-scroll (&optional window &rest _)
   "Render thumbnail on WINDOW."
   (line-reminder--with-no-redisplay
-    (line-reminder--thumb-render (or window (selected-window)))))
+    (line-reminder--thumb-render-window (or window (selected-window)))))
 
-(defun line-reminder--thumb-render (window)
-  "Start render thumbnail for WINDOW."
+(defun line-reminder--thumb-render-buffer (&optional buffer-or-name)
+  "Render thumbnail for BUFFER-OR-NAME."
+  (dolist (win (get-buffer-window-list (or (current-buffer) buffer-or-name) nil t))
+    (line-reminder--thumb-render-window win)))
+
+(defun line-reminder--thumb-render-window (window)
+  "Render thumbnail for WINDOW."
   (when line-reminder-thumbnail
     (line-reminder--with-selected-window window
       (when line-reminder-mode
@@ -748,9 +755,9 @@ and END."
 
 (defun line-reminder--thumb-delete-ovs ()
   "Delete thumbnail overlays."
-  (when line-reminder--thumb-ovs
-    (mapc 'delete-overlay line-reminder--thumb-ovs)
-    (setq line-reminder--thumb-ovs nil)))
+  (let ((key (selected-window)))
+    (mapc 'delete-overlay (ht-get line-reminder--thumb-ovs key))
+    (ht-set line-reminder--thumb-ovs key nil)))
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
