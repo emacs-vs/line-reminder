@@ -13,6 +13,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Avoid `Scan error: "Unbalanced parentheses"` when custom save file (121f5533038db59fdaca1b0d8da56f9b9efb296b)
 * Refactor to increase performace, for #5 (7561700e37543bc7622e41d81d5b6dd038a8efe0)
 * Render thumbnail by window (#15)
+* Use `after-save-hook` instead of advising `save-buffer` function (#16)
 
 ## 0.5.1
 > Released Feb 4, 2022
