@@ -386,8 +386,8 @@ LINE : pass in by `linum-format' variable."
   (add-hook 'after-change-functions #'line-reminder--after-change nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   (add-hook 'after-save-hook #'line-reminder--save-buffer nil t)
-  ;; Don't use local for these hooks/functions, without the local flag it will
-  ;; be much faster for large operations (paste, save, etc)
+  ;; XXX: Don't use local for these hooks/functions, without the local flag
+  ;; it will be much faster for large operations (paste, save, etc)
   (add-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
   (add-hook 'window-size-change-functions #'line-reminder--thumb-size-change))
 
@@ -398,6 +398,8 @@ LINE : pass in by `linum-format' variable."
   (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (remove-hook 'after-save-hook #'line-reminder--save-buffer t)
   (line-reminder-clear-reminder-lines-sign)
+  ;; XXX: Don't use local for these hooks/functions, without the local flag
+  ;; it will be much faster for large operations (paste, save, etc)
   (remove-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
   (remove-hook 'window-size-change-functions #'line-reminder--thumb-size-change))
 
