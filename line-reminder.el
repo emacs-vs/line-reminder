@@ -520,7 +520,7 @@ and END."
        (lambda (line sign)
          (line-reminder--mark-line-by-linum line (line-reminder--get-face sign)))
        line-reminder--line-status)
-      (line-reminder--thumb-size-change))))
+      (line-reminder--thumb-render-buffer))))
 
 (defun line-reminder--before-change (beg end)
   "Do stuff before buffer is changed with BEG and END."
@@ -725,19 +725,17 @@ and END."
                        percent-line (floor percent-line)
                        added (ht-get guard percent-line))
                  ;; Prevent creating overlay twice on the same line
-                 (when (or (null added)
-                           ;; 'saved line can overwrite 'modified line
-                           (eq added 'modified))
+                 (when (null added)
                    (goto-char start-point)
                    (when (= (forward-line percent-line) 0)
                      (ht-set guard percent-line sign)
                      (line-reminder--thumb-create-ov face))))
                line-reminder--line-status))))))))
 
-(defun line-reminder--thumb-size-change (&rest _)
+(defun line-reminder--thumb-size-change (&optional frame &rest _)
   "Render thumbnail for all visible windows."
   (line-reminder--with-no-redisplay
-    (dolist (win (window-list)) (line-reminder--thumb-render-window win))))
+    (dolist (win (window-list frame)) (line-reminder--thumb-render-window win))))
 
 (defun line-reminder--thumb-scroll (&optional window &rest _)
   "Render thumbnail on WINDOW."
