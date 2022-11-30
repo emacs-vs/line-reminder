@@ -520,7 +520,7 @@ and END."
        (lambda (line sign)
          (line-reminder--mark-line-by-linum line (line-reminder--get-face sign)))
        line-reminder--line-status)
-      (line-reminder--thumb-size-change))))
+      (line-reminder--thumb-render-buffer))))
 
 (defun line-reminder--before-change (beg end)
   "Do stuff before buffer is changed with BEG and END."
