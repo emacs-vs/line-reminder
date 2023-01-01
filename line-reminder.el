@@ -201,7 +201,6 @@
   (declare (indent 0) (debug t))
   `(let ((inhibit-redisplay t)
          (inhibit-modification-hooks t)
-         (inhibit-point-motion-hooks t)
          after-focus-change-function
          buffer-list-update-hook
          display-buffer-alist
@@ -654,14 +653,6 @@ and END."
     (`left-fringe 'right-fringe)
     (`right-fringe 'left-fringe)))
 
-(defun line-reminder--window-height ()
-  "`line-spacing'-aware calculation of `window-height'."
-  (if (and (fboundp 'window-pixel-height)
-           (fboundp 'line-pixel-height)
-           (display-graphic-p))
-      (/ (window-pixel-height) (line-pixel-height))
-    (window-height)))
-
 (defun line-reminder--thumb-create-tty-ov (face fringe priority)
   "Create single tty thumbnail overlay with FACE in FRINGE with PRIORITY."
   (let* ((msg (line-reminder--get-string-sign face))
@@ -711,7 +702,7 @@ and END."
   (line-reminder--with-no-redisplay
     (line-reminder--with-selected-window window
       (when line-reminder--cache-max-line
-        (let ((window-lines (float (line-reminder--window-height)))
+        (let ((window-lines (float (max 0 (1- (window-text-height)))))
               (buffer-lines (float line-reminder--cache-max-line))
               (guard (ht-create)) added start-point percent-line face)
           (when (< window-lines buffer-lines)
@@ -727,7 +718,7 @@ and END."
                  ;; Prevent creating overlay twice on the same line
                  (when (null added)
                    (goto-char start-point)
-                   (when (= (forward-line percent-line) 0)
+                   (when (zerop (forward-line percent-line))
                      (ht-set guard percent-line sign)
                      (line-reminder--thumb-create-ov face))))
                line-reminder--line-status))))))))
