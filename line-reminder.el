@@ -434,7 +434,7 @@ and END."
   (unless (zerop delta)
     ;; Clean up all indicators before shifting!
     (when (line-reminder--use-indicators-p)
-      (ht-map (lambda (line sign)
+      (ht-map (lambda (line _sign)
                 (when (< start line)
                   (line-reminder--ind-remove-indicator-at-line line)))
               line-reminder--line-status))
