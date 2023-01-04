@@ -14,6 +14,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Refactor to increase performace, for #5 (7561700e37543bc7622e41d81d5b6dd038a8efe0)
 * Render thumbnail by window (#15)
 * Never `advice-remove` to `save-buffer` (#17)
+* Redesign indicators clean up logic (#21)
 
 ## 0.5.1
 > Released Feb 4, 2022
