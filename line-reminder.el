@@ -51,7 +51,7 @@
                  (const :tag "indicators" indicators)))
 
 (defface line-reminder-modified-sign-face
-  `((t :foreground "#EFF284"))
+  `((t :foreground "#DDE165"))
   "Modifed sign face."
   :group 'line-reminder)
 
