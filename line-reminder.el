@@ -529,8 +529,8 @@ and END."
               (- line-reminder--before-max-pt len)))
 
       (setq line-reminder--cache-max-line
-            (or (line-reminder--line-number-at-pos line-reminder--before-max-pt)
-                (line-reminder--line-number-at-pos (point-max))))
+            (line-reminder--line-number-at-pos (min line-reminder--before-max-pt
+                                                    (point-max))))
 
       (if adding-p
           (setq end-linum (line-reminder--line-number-at-pos end)
@@ -551,8 +551,8 @@ and END."
       ;; NOTE: Deletion..
       (unless adding-p
         (line-reminder--remove-lines begin-linum end-linum comm-or-uncomm-p)
-        (line-reminder--add-change-line begin-linum)
-        (line-reminder--shift-all-lines starting-line delta-lines))
+        (line-reminder--shift-all-lines starting-line delta-lines)
+        (line-reminder--add-change-line begin-linum))
 
       ;; NOTE: Addition..
       (when adding-p
