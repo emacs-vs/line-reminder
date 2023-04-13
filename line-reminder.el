@@ -171,6 +171,9 @@
 (defvar-local line-reminder--undo-cancel-p nil
   "If non-nil, we should remove record of changes/saved lines for undo actions.")
 
+(defvar-local line-reminder--thumb-ovs (ht-create)
+  "Overlays indicate thumbnail.")
+
 ;;
 ;; (@* "External" )
 ;;
@@ -352,6 +355,7 @@ LINE : pass in by `linum-format' variable."
     (`indicators
      (require 'indicators)))
   (ht-clear line-reminder--line-status)
+  (ht-clear line-reminder--thumb-ovs)
   (add-hook 'before-change-functions #'line-reminder--before-change nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
@@ -400,6 +404,7 @@ LINE : pass in by `linum-format' variable."
   "Clear all the reminder lines' sign."
   (interactive)
   (ht-clear line-reminder--line-status)
+  (ht-clear line-reminder--thumb-ovs)
   (line-reminder--ind-clear-indicators-absolute)
   (line-reminder--thumb-delete-ovs))
 
@@ -590,6 +595,7 @@ and END."
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
     (ht-clear line-reminder--line-status)
+    (ht-clear line-reminder--thumb-ovs)
     (line-reminder--ind-clear-indicators-absolute)))
 
 ;;
@@ -622,13 +628,10 @@ and END."
   "Modifed sign face."
   :group 'line-reminder)
 
-(defvar-local line-reminder--thumb-ovs (ht-create)
-  "Overlays indicate thumbnail.")
-
 (defun line-reminder--oppose-fringe (fringe)
   "Return opposite FRINGE type."
   (cl-case fringe
-    (`left-fringe 'right-fringe)
+    (`left-fringe  'right-fringe)
     (`right-fringe 'left-fringe)))
 
 (defun line-reminder--thumb-create-tty-ov (face fringe priority)
@@ -637,13 +640,13 @@ and END."
          (len (length msg))
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,fringe 2)))
-         (after-string (concat (propertize "." 'display display-string) msg))
+         (display-string (concat (propertize "." 'display display-string) msg))
          (ov (make-overlay (line-beginning-position) (line-end-position))))
-    (put-text-property 0 1 'cursor t after-string)
+    (put-text-property 0 1 'cursor t display-string)
     (ov-set ov
-            'after-string after-string
+            'after-string display-string
             'window (selected-window)
-            'priority priority
+            'priority (1+ priority)
             'line-reminder-thumb t)
     ov))
 
@@ -659,7 +662,7 @@ and END."
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
             'window (selected-window)
-            'priority priority
+            'priority (1+ priority)
             'line-reminder-thumb t)
     ov))
 
@@ -685,7 +688,7 @@ and END."
               (guard (ht-create)) added start-point percent-line face)
           (when (< window-lines buffer-lines)
             (save-excursion
-              (move-to-window-line 0)  ; start from 0 percent
+              (goto-char (window-start))
               (setq start-point (point))
               (ht-map
                (lambda (line sign)
