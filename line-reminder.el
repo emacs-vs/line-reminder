@@ -688,7 +688,7 @@ and END."
               (guard (ht-create)) added start-point percent-line face)
           (when (< window-lines buffer-lines)
             (save-excursion
-              (goto-char (window-start))
+              (goto-char (window-start))  ; start from 0 percent
               (setq start-point (point))
               (ht-map
                (lambda (line sign)
