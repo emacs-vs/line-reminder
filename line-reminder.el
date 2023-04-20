@@ -595,8 +595,9 @@ and END."
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
     (ht-clear line-reminder--line-status)
-    (ht-clear line-reminder--thumb-ovs)
-    (line-reminder--ind-clear-indicators-absolute)))
+    (line-reminder--ind-clear-indicators-absolute)
+    (line-reminder--thumb-delete-ovs)
+    (ht-clear line-reminder--thumb-ovs)))
 
 ;;
 ;; (@* "Thumbnail" )
@@ -675,8 +676,7 @@ and END."
                 #'line-reminder--thumb-create-tty-ov))
          (ov (funcall fnc face fringe priority))
          (key (selected-window)))
-    (ht-set line-reminder--thumb-ovs key
-            (push ov (ht-get line-reminder--thumb-ovs key)))))
+    (push ov (ht-get line-reminder--thumb-ovs key))))
 
 (defun line-reminder--thumb-show (window &rest _)
   "Show thumbnail using overlays inside WINDOW."
