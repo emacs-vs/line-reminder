@@ -289,7 +289,7 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
     (ov-set ov
             'after-string display-string
             'line-reminder-window (selected-window)
-            'priority (1+ priority))
+            'priority priority)
     ov))
 
 (defun line-reminder--create-fringe-ov (face fringe priority)
@@ -304,7 +304,7 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
             'line-reminder-window (selected-window)
-            'priority (1+ priority))
+            'priority priority)
     ov))
 
 (defun line-reminder--create-ov (face)
@@ -320,6 +320,10 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
 (defun line-reminder--mark-line (_line face)
   "Mark the LINE by using FACE name."
   (line-reminder--create-ov face))
+
+(defun line-reminder--delete-ovs ()
+  "Clean up all the indicators."
+  (remove-overlays (point-min) (point-max) 'line-reminder-window (selected-window)))
 
 (defun line-reminder--add-change-line (line)
   "Add LINE with `modified' flag."
@@ -514,10 +518,6 @@ and END."
   (line-reminder--render-buffer)
   (line-reminder--thumb-render-buffer))
 
-(defun line-reminder--delete-ovs ()
-  "Clean up all the indicators."
-  (remove-overlays (point-min) (point-max) 'line-reminder-window (selected-window)))
-
 (defun line-reminder--before-change (beg end)
   "Do stuff before buffer is changed with BEG and END."
   (line-reminder--with-valid-situation beg end
@@ -582,12 +582,11 @@ and END."
 
 (defun line-reminder--render ()
   "Render indicator once."
-  (when (line-reminder--use-indicators-p)
-    (line-reminder--delete-ovs)
-    (line-reminder--remove-lines-out-range)  ; Remove out range
-    (line-reminder--walk-window-lines
-     (lambda (line sign)
-       (line-reminder--mark-line line (line-reminder--get-face sign))))))
+  (line-reminder--remove-lines-out-range)  ; Remove out range!
+  ;; Walk only display lines, this makes performance extremely fast!
+  (line-reminder--walk-window-lines
+   (lambda (line sign)
+     (line-reminder--mark-line line (line-reminder--get-face sign)))))
 
 (defun line-reminder--size-change (&optional frame &rest _)
   "Render for all visible windows from FRAME."
@@ -599,15 +598,16 @@ and END."
   (line-reminder--with-no-redisplay
     (line-reminder--render-window (or window (selected-window)))))
 
-(defun line-reminder--render-buffer (&optional buffer-or-name)
-  "Render for BUFFER-OR-NAME."
-  (dolist (win (get-buffer-window-list (or buffer-or-name (current-buffer)) nil t))
+(defun line-reminder--render-buffer ()
+  "Render indicators for current buffer."
+  (dolist (win (get-buffer-window-list nil nil t))
     (line-reminder--render-window win)))
 
 (defun line-reminder--render-window (window)
   "Render for WINDOW."
   (line-reminder--with-selected-window window
-    (when line-reminder-mode
+    (when (and line-reminder-mode
+               (line-reminder--use-indicators-p))
       (line-reminder--delete-ovs)
       (line-reminder--render))))
 
@@ -736,11 +736,14 @@ and END."
                      percent-line (floor percent-line)
                      added (ht-get guard percent-line))
                ;; Prevent creating overlay twice on the same line
-               (when (null added)
+               (when (or (null added)              ; Never touched
+                         (eq (car added) 'saved))  ; `modified' can overwrite `saved'
                  (goto-char start-point)
                  (when (zerop (forward-line percent-line))
-                   (ht-set guard percent-line sign)
-                   (line-reminder--thumb-create-ov face))))
+                   (when added
+                     (delete-overlay (cdr added)))  ; Remove old overlay!
+                   (ht-set guard percent-line
+                           `(,sign . ,(line-reminder--thumb-create-ov face))))))
              line-reminder--line-status)))))))
 
 (defun line-reminder--thumb-size-change (&optional frame &rest _)
@@ -753,9 +756,9 @@ and END."
   (line-reminder--with-no-redisplay
     (line-reminder--thumb-render-window (or window (selected-window)))))
 
-(defun line-reminder--thumb-render-buffer (&optional buffer-or-name)
-  "Render thumbnail for BUFFER-OR-NAME."
-  (dolist (win (get-buffer-window-list (or buffer-or-name (current-buffer)) nil t))
+(defun line-reminder--thumb-render-buffer ()
+  "Render indicators for current buffer."
+  (dolist (win (get-buffer-window-list nil nil t))
     (line-reminder--thumb-render-window win)))
 
 (defun line-reminder--thumb-render-window (window)
