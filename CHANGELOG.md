@@ -8,7 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## 0.6.0 (Unreleased)
 > Released N/A
 
-* N/A
+* perf: Render only display area (#28)
 
 ## 0.5.2
 > Released Oct 27, 2023
