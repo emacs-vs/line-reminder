@@ -20,6 +20,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Render thumbnail by window (#15)
 * Never `advice-remove` to `save-buffer` (#17)
 * Redesign indicators clean up logic (#21)
+* perf: Render only display area (#28)
 
 ## 0.5.1
 > Released Feb 4, 2022
