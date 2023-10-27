@@ -640,7 +640,7 @@ and END."
     (put-text-property 0 1 'cursor t display-string)
     (ov-set ov
             'after-string display-string
-            'line-reminder-window-id (selected-window)
+            'line-reminder-thumb-window (selected-window)
             'priority (1+ priority)
             'line-reminder-thumb t)
     ov))
@@ -656,7 +656,7 @@ and END."
     (ov-set ov
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
-            'line-reminder-window-id (selected-window)
+            'line-reminder-thumb-window (selected-window)
             'priority (1+ priority)
             'line-reminder-thumb t)
     ov))
@@ -722,7 +722,7 @@ and END."
 
 (defun line-reminder--thumb-delete-ovs ()
   "Delete thumbnail overlays."
-  (remove-overlays (point-min) (point-max) 'line-reminder-window-id (selected-window)))
+  (remove-overlays (point-min) (point-max) 'line-reminder-thumb-window (selected-window)))
 
 (provide 'line-reminder)
 ;;; line-reminder.el ends here
