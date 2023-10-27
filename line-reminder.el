@@ -122,26 +122,14 @@
   :type 'symbol
   :group 'line-reminder)
 
-(defcustom line-reminder-ignore-buffer-names
-  '("[*]Backtrace[*]"
-    "[*]Buffer List[*]"
-    "[*]Checkdoc Status[*]"
-    "[*]Echo Area"
-    "[*]helm"
-    "[*]Help[*]"
-    "magit[-]*[[:ascii:]]*[:]"
-    "[*]Minibuf-"
-    "[*]Packages[*]"
-    "[*]run[*]"
-    "[*]shell[*]"
-    "[*]undo-tree[*]")
-  "Buffer Name list you want to ignore this mode."
-  :type 'list
-  :group 'line-reminder)
-
 (defcustom line-reminder-disable-commands '()
   "List of commands that wouldn't take effect from this package."
   :type 'list
+  :group 'line-reminder)
+
+(defcustom line-reminder-add-line-function nil
+  "Function call when add line to mark."
+  :type 'function
   :group 'line-reminder)
 
 (defvar-local line-reminder--line-status (ht-create)
@@ -225,7 +213,10 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
       (goto-char wstart)
       (setq line (line-reminder--line-number-at-pos))  ; Only call this one time!
       (while (and (<= (point) wend) (not break))
-        (when-let ((sign (ht-get line-reminder--line-status line)))
+        (when-let ((sign (ht-get line-reminder--line-status line))
+                   ((if (functionp line-reminder-add-line-function)
+                        (funcall line-reminder-add-line-function)
+                      t)))
           (funcall callback line sign))
         (cl-incf line)                ; This saves up a lot of performance!
         (when (eobp) (setq break t))  ; This make it run the last line!
@@ -238,12 +229,6 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
 (defun line-reminder--line-number-at-pos (&optional pos)
   "Return line number at POS with absolute as default."
   (ignore-errors (line-number-at-pos pos t)))
-
-(defun line-reminder--contain-list-string-regexp (in-list in-str)
-  "Return non-nil if IN-STR is listed in IN-LIST.
-
-This function uses `string-match-p'."
-  (cl-some (lambda (elm) (string-match-p elm in-str)) in-list))
 
 (defun line-reminder--get-string-sign (face)
   "Return string sign priority by FACE."
@@ -456,8 +441,6 @@ Arguments BEG and END are passed in by before/after change functions."
   (and
    (not (line-reminder--custom-file-saving))
    (not buffer-read-only)
-   (not (line-reminder--contain-list-string-regexp
-         line-reminder-ignore-buffer-names (buffer-name)))
    (not (memq this-command line-reminder-disable-commands))
    (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
@@ -523,8 +506,8 @@ and END."
   (line-reminder--with-valid-situation beg end
     ;; If buffer consider virtual buffer like `*scratch*`, then always
     ;; treat it as modified
-    (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress))
-    (setq line-reminder--before-max-pt (point-max)
+    (setq line-reminder--undo-cancel-p (and (buffer-file-name) undo-in-progress)
+          line-reminder--before-max-pt (point-max)
           line-reminder--before-max-linum (line-reminder--line-number-at-pos (point-max))
           line-reminder--before-begin-pt beg
           line-reminder--before-begin-linum (line-reminder--line-number-at-pos beg)
