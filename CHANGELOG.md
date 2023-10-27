@@ -5,8 +5,13 @@ All notable changes to this project will be documented in this file.
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
-## 0.5.2 (Unreleased)
+## 0.6.0 (Unreleased)
 > Released N/A
+
+* N/A
+
+## 0.5.2
+> Released Oct 27, 2023
 
 * Use windows size changed hook instead of configuration hook. (f34db57ae66fe95e502fcf8cd1da959f82bf96df)
 * Remove delay to avoid `window-scroll-functions` being called repeatedly (9728edf1c0db9efcd2a92055db9bb9747c8b4bf1)
