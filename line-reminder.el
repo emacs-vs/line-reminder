@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacs-vs/line-reminder
 ;; Version: 0.5.1
-;; Package-Requires: ((emacs "25.1") (indicators "0.0.4") (fringe-helper "1.0.1") (ov "1.0.6") (ht "2.0"))
+;; Package-Requires: ((emacs "25.1") (fringe-helper "1.0.1") (ov "1.0.6") (ht "2.0"))
 ;; Keywords: convenience annotation
 
 ;; This file is NOT part of GNU Emacs.
@@ -176,12 +176,9 @@
 ;;
 
 (defvar linum-format)
-(defvar ind-managed-absolute-indicators)
 (defvar buffer-undo-tree)
 (defvar undo-tree-mode)
 
-(declare-function ind-create-indicator-at-line "ext:indicators.el")
-(declare-function ind-clear-indicators-absolute "ext:indicators.el")
 (declare-function undo-tree-current "ext:undo-tree.el")
 (declare-function undo-tree-node-previous "ext:undo-tree.el")
 
@@ -218,10 +215,21 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
   (declare (indent 1) (debug t))
   `(when (window-live-p ,window) (with-selected-window ,window ,@body)))
 
-(defun line-reminder--goto-line (line)
-  "Jump to LINE."
-  (goto-char (point-min))
-  (forward-line (1- line)))
+(defun line-reminder--walk-window-lines (callback)
+  "Walk through display window lines and execute CALLBACK on each line."
+  (let ((wend (window-end nil t))
+        (wstart (window-start))
+        (line)
+        (break))
+    (save-excursion
+      (goto-char wstart)
+      (setq line (line-reminder--line-number-at-pos))  ; Only call this one time!
+      (while (and (<= (point) wend) (not break))
+        (when-let ((sign (ht-get line-reminder--line-status line)))
+          (funcall callback line sign))
+        (cl-incf line)                ; This saves up a lot of performance!
+        (when (eobp) (setq break t))  ; This make it run the last line!
+        (forward-line 1)))))
 
 (defun line-reminder--use-indicators-p ()
   "Return non-nil if using indicator."
@@ -269,35 +277,58 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
            (`modified 'line-reminder-modified-sign-face)
            (`saved 'line-reminder-saved-sign-face)))))
 
-(defun line-reminder--mark-line-by-linum (line face)
-  "Mark the LINE by using FACE name."
-  (line-reminder--mute-apply
-    ;; XXX: We set variable `ind-managed-absolute-indicators' to `nil' to
-    ;; save huge performance from function `ind-update-absolute'.
-    (let (ind-managed-absolute-indicators)
-      (ind-create-indicator-at-line
-       line :managed t :dynamic t :relative nil :fringe line-reminder-fringe-placed
-       :bitmap line-reminder-bitmap :face face
-       :priority (line-reminder--get-priority face)))))
+(defun line-reminder--create-tty-ov (face fringe priority)
+  "Create single tty overlay with FACE in FRINGE with PRIORITY."
+  (let* ((msg (line-reminder--get-string-sign face))
+         (len (length msg))
+         (msg (progn (add-face-text-property 0 len face nil msg) msg))
+         (display-string `(space :align-to (- ,fringe 2)))
+         (display-string (concat (propertize "." 'display display-string) msg))
+         (ov (make-overlay (line-beginning-position) (line-end-position))))
+    (put-text-property 0 1 'cursor t display-string)
+    (ov-set ov
+            'after-string display-string
+            'line-reminder-window (selected-window)
+            'priority (1+ priority))
+    ov))
 
-(defun line-reminder--ind-remove-indicator-at-line (line)
-  "Remove the indicator on LINE."
-  (save-excursion
-    (line-reminder--goto-line line)
-    (remove-overlays (line-beginning-position) (line-end-position) 'ind-indicator-absolute t)))
+(defun line-reminder--create-fringe-ov (face fringe priority)
+  "Create single fringe overlay with FACE in FRINGE with PRIORITY."
+  (let* ((pos (point))
+         ;; If `pos' is at the beginning of line, overlay of the
+         ;; fringe will be on the previous visual line.
+         (pos (if (= (line-end-position) pos) pos (1+ pos)))
+         (display-string `(,fringe ,line-reminder-bitmap ,face))
+         (ov (make-overlay pos pos)))
+    (ov-set ov
+            'after-string (propertize "." 'display display-string)
+            'fringe-helper t
+            'line-reminder-window (selected-window)
+            'priority (1+ priority))
+    ov))
+
+(defun line-reminder--create-ov (face)
+  "Create single overlay with FACE."
+  (let* ((fringe line-reminder-fringe-placed)
+         (priority (line-reminder--get-priority face))
+         (fnc (if (display-graphic-p)
+                  #'line-reminder--create-fringe-ov
+                #'line-reminder--create-tty-ov))
+         (ov (funcall fnc face fringe priority)))
+    ov))
+
+(defun line-reminder--mark-line (_line face)
+  "Mark the LINE by using FACE name."
+  (line-reminder--create-ov face))
 
 (defun line-reminder--add-change-line (line)
   "Add LINE with `modified' flag."
-  (when (line-reminder--use-indicators-p)
-    (unless (equal (ht-get line-reminder--line-status line) 'modified)
-      (ht-set line-reminder--line-status line 'modified)
-      (line-reminder--mark-line-by-linum line 'line-reminder-modified-sign-face))))
+  (unless (equal (ht-get line-reminder--line-status line) 'modified)
+    (ht-set line-reminder--line-status line 'modified)))
 
 (defun line-reminder--remove-change-line (line)
   "Remove LINE from status."
-  (ht-remove line-reminder--line-status line)
-  (when (line-reminder--use-indicators-p)
-    (line-reminder--ind-remove-indicator-at-line line)))
+  (ht-remove line-reminder--line-status line))
 
 (defsubst line-reminder--linum-format-string-align-right ()
   "Return format string align on the right."
@@ -326,7 +357,8 @@ LINE : Pass is line number for normal sign."
 
 (defun line-reminder--linum-format (line)
   "Core line reminder format string logic here.
-LINE : pass in by `linum-format' variable."
+
+Argument LINE is passed in by `linum-format' variable."
   (let ((sign (ht-get line-reminder--line-status line))
         (normal-sign (line-reminder--propertized-sign-by-type 'normal line))
         reminder-sign)
@@ -349,31 +381,36 @@ LINE : pass in by `linum-format' variable."
     (`linum
      (require 'linum)
      (setq-local linum-format 'line-reminder--linum-format))
-    (`indicators
-     (require 'indicators)))
+    (`indicators ))  ; XXX: Nothing to do here.
   (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change nil t)
-  (add-hook 'post-command-hook #'line-reminder--post-command nil t)
+  (add-hook 'post-command-hook #'line-reminder--undo-post-command nil t)
   ;; XXX: We add advice to `save-buffer', but we never need to remove it since
   ;; we have checked `line-reminder-mode' inside `line-reminder--save-buffer'
   ;; function.
   (advice-add 'save-buffer :after #'line-reminder--save-buffer)
   ;; XXX: Don't use local for these hooks/functions, without the local flag
   ;; it will be much faster for large operations (paste, save, etc)
-  (add-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
-  (add-hook 'window-size-change-functions #'line-reminder--thumb-size-change))
+  (progn
+    (add-hook 'window-scroll-functions #'line-reminder--scroll)
+    (add-hook 'window-size-change-functions #'line-reminder--size-change)
+    (add-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
+    (add-hook 'window-size-change-functions #'line-reminder--thumb-size-change)))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder--before-change t)
   (remove-hook 'after-change-functions #'line-reminder--after-change t)
-  (remove-hook 'post-command-hook #'line-reminder--post-command t)
+  (remove-hook 'post-command-hook #'line-reminder--undo-post-command t)
   (line-reminder-clear-reminder-lines-sign)
   ;; XXX: Don't use local for these hooks/functions, without the local flag
   ;; it will be much faster for large operations (paste, save, etc)
-  (remove-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
-  (remove-hook 'window-size-change-functions #'line-reminder--thumb-size-change))
+  (progn
+    (remove-hook 'window-scroll-functions #'line-reminder--scroll)
+    (remove-hook 'window-size-change-functions #'line-reminder--size-change)
+    (remove-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
+    (remove-hook 'window-size-change-functions #'line-reminder--thumb-size-change)))
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
@@ -400,7 +437,7 @@ LINE : pass in by `linum-format' variable."
   "Clear all the reminder lines' sign."
   (interactive)
   (ht-clear line-reminder--line-status)
-  (line-reminder--ind-clear-indicators-absolute)
+  (line-reminder--delete-ovs)
   (line-reminder--thumb-delete-ovs))
 
 (defun line-reminder--custom-file-saving ()
@@ -432,19 +469,11 @@ and END."
 (defun line-reminder--shift-all-lines (start delta)
   "Shift all `change`/`saved` lines by from START line with DELTA."
   (unless (zerop delta)
-    ;; Clean up all indicators before shifting!
-    (when (line-reminder--use-indicators-p)
-      (ht-map (lambda (line _sign)
-                (when (< start line)
-                  (line-reminder--ind-remove-indicator-at-line line)))
-              line-reminder--line-status))
     (let ((new-ht (ht-create)))
       (ht-map (lambda (line sign)
                 (if (< start line)
                     (let ((new-line (+ line delta)))
-                      (ht-set new-ht new-line sign)
-                      (line-reminder--mark-line-by-linum new-line
-                                                         (line-reminder--get-face sign)))
+                      (ht-set new-ht new-line sign))
                   (ht-set new-ht line sign)))
               line-reminder--line-status)
       (setq line-reminder--line-status new-ht))))  ; update
@@ -482,23 +511,12 @@ and END."
   (ht-map  ; convert to saved
    (lambda (line _value) (ht-set line-reminder--line-status line 'saved))
    line-reminder--line-status)
-  (line-reminder--remove-lines-out-range)  ; Remove out range.
-  (line-reminder--mark-buffer))
+  (line-reminder--render-buffer)
+  (line-reminder--thumb-render-buffer))
 
-(defun line-reminder--ind-clear-indicators-absolute ()
+(defun line-reminder--delete-ovs ()
   "Clean up all the indicators."
-  (when (line-reminder--use-indicators-p) (ind-clear-indicators-absolute)))
-
-(defun line-reminder--mark-buffer ()
-  "Mark the whole buffer."
-  (when (line-reminder--use-indicators-p)
-    (save-excursion
-      (line-reminder--ind-clear-indicators-absolute)
-      (ht-map
-       (lambda (line sign)
-         (line-reminder--mark-line-by-linum line (line-reminder--get-face sign)))
-       line-reminder--line-status)
-      (line-reminder--thumb-render-buffer))))
+  (remove-overlays (point-min) (point-max) 'line-reminder-window (selected-window)))
 
 (defun line-reminder--before-change (beg end)
   "Do stuff before buffer is changed with BEG and END."
@@ -559,8 +577,39 @@ and END."
         (line-reminder--shift-all-lines starting-line delta-lines)
         (line-reminder--add-lines begin-linum end-linum))
 
-      (line-reminder--remove-lines-out-range)  ; Remove out range
-      (line-reminder--thumb-render-buffer))))  ; Display thumbnail
+      (line-reminder--render-buffer)
+      (line-reminder--thumb-render-buffer))))
+
+(defun line-reminder--render ()
+  "Render indicator once."
+  (when (line-reminder--use-indicators-p)
+    (line-reminder--delete-ovs)
+    (line-reminder--remove-lines-out-range)  ; Remove out range
+    (line-reminder--walk-window-lines
+     (lambda (line sign)
+       (line-reminder--mark-line line (line-reminder--get-face sign))))))
+
+(defun line-reminder--size-change (&optional frame &rest _)
+  "Render for all visible windows from FRAME."
+  (line-reminder--with-no-redisplay
+    (dolist (win (window-list frame)) (line-reminder--render-window win))))
+
+(defun line-reminder--scroll (&optional window &rest _)
+  "Render on WINDOW."
+  (line-reminder--with-no-redisplay
+    (line-reminder--render-window (or window (selected-window)))))
+
+(defun line-reminder--render-buffer (&optional buffer-or-name)
+  "Render for BUFFER-OR-NAME."
+  (dolist (win (get-buffer-window-list (or buffer-or-name (current-buffer)) nil t))
+    (line-reminder--render-window win)))
+
+(defun line-reminder--render-window (window)
+  "Render for WINDOW."
+  (line-reminder--with-selected-window window
+    (when line-reminder-mode
+      (line-reminder--delete-ovs)
+      (line-reminder--render))))
 
 ;;
 ;; (@* "Save" )
@@ -586,11 +635,11 @@ and END."
     (ignore-errors (line-reminder--undo-tree-root-p)))
    (t (eq pending-undo-list t))))
 
-(defun line-reminder--post-command ()
+(defun line-reminder--undo-post-command ()
   "Post command for undo cancelling."
   (when (and line-reminder--undo-cancel-p (line-reminder--undo-root-p))
     (ht-clear line-reminder--line-status)
-    (line-reminder--ind-clear-indicators-absolute)
+    (line-reminder--delete-ovs)
     (line-reminder--thumb-delete-ovs)))
 
 ;;
@@ -641,8 +690,7 @@ and END."
     (ov-set ov
             'after-string display-string
             'line-reminder-thumb-window (selected-window)
-            'priority (1+ priority)
-            'line-reminder-thumb t)
+            'priority (1+ priority))
     ov))
 
 (defun line-reminder--thumb-create-fringe-ov (face fringe priority)
@@ -657,8 +705,7 @@ and END."
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
             'line-reminder-thumb-window (selected-window)
-            'priority (1+ priority)
-            'line-reminder-thumb t)
+            'priority (1+ priority))
     ov))
 
 (defun line-reminder--thumb-create-ov (face)
@@ -668,37 +715,36 @@ and END."
          (fnc (if (display-graphic-p)
                   #'line-reminder--thumb-create-fringe-ov
                 #'line-reminder--thumb-create-tty-ov))
-         (ov (funcall fnc face fringe priority))
-         (key (selected-window)))))
+         (ov (funcall fnc face fringe priority)))
+    ov))
 
-(defun line-reminder--thumb-show (window &rest _)
-  "Show thumbnail using overlays inside WINDOW."
+(defun line-reminder--thumb-render (&rest _)
+  "Render thumbnail."
   (line-reminder--with-no-redisplay
-    (line-reminder--with-selected-window window
-      (when line-reminder--cache-max-line
-        (let ((window-lines (float (max 0 (1- (window-text-height)))))
-              (buffer-lines (float line-reminder--cache-max-line))
-              (guard (ht-create)) added start-point percent-line face)
-          (when (< window-lines buffer-lines)
-            (save-excursion
-              (goto-char (window-start))  ; start from 0 percent
-              (setq start-point (point))
-              (ht-map
-               (lambda (line sign)
-                 (setq face (line-reminder--get-face sign t)
-                       percent-line (* (/ line buffer-lines) window-lines)
-                       percent-line (floor percent-line)
-                       added (ht-get guard percent-line))
-                 ;; Prevent creating overlay twice on the same line
-                 (when (null added)
-                   (goto-char start-point)
-                   (when (zerop (forward-line percent-line))
-                     (ht-set guard percent-line sign)
-                     (line-reminder--thumb-create-ov face))))
-               line-reminder--line-status))))))))
+    (when line-reminder--cache-max-line
+      (let ((window-lines (float (max 0 (1- (window-text-height)))))
+            (buffer-lines (float line-reminder--cache-max-line))
+            (guard (ht-create)) added start-point percent-line face)
+        (when (< window-lines buffer-lines)
+          (save-excursion
+            (goto-char (window-start))  ; start from 0 percent
+            (setq start-point (point))
+            (ht-map
+             (lambda (line sign)
+               (setq face (line-reminder--get-face sign t)
+                     percent-line (* (/ line buffer-lines) window-lines)
+                     percent-line (floor percent-line)
+                     added (ht-get guard percent-line))
+               ;; Prevent creating overlay twice on the same line
+               (when (null added)
+                 (goto-char start-point)
+                 (when (zerop (forward-line percent-line))
+                   (ht-set guard percent-line sign)
+                   (line-reminder--thumb-create-ov face))))
+             line-reminder--line-status)))))))
 
 (defun line-reminder--thumb-size-change (&optional frame &rest _)
-  "Render thumbnail for all visible windows."
+  "Render thumbnail for all visible windows in FRAME."
   (line-reminder--with-no-redisplay
     (dolist (win (window-list frame)) (line-reminder--thumb-render-window win))))
 
@@ -709,7 +755,7 @@ and END."
 
 (defun line-reminder--thumb-render-buffer (&optional buffer-or-name)
   "Render thumbnail for BUFFER-OR-NAME."
-  (dolist (win (get-buffer-window-list (or (current-buffer) buffer-or-name) nil t))
+  (dolist (win (get-buffer-window-list (or buffer-or-name (current-buffer)) nil t))
     (line-reminder--thumb-render-window win)))
 
 (defun line-reminder--thumb-render-window (window)
@@ -718,7 +764,7 @@ and END."
     (line-reminder--with-selected-window window
       (when line-reminder-mode
         (line-reminder--thumb-delete-ovs)
-        (line-reminder--thumb-show window)))))
+        (line-reminder--thumb-render)))))
 
 (defun line-reminder--thumb-delete-ovs ()
   "Delete thumbnail overlays."

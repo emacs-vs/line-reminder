@@ -12,7 +12,6 @@
 (source "melpa")
 
 (depends-on "emacs" "25.1")
-(depends-on "indicators")
 (depends-on "fringe-helper")
 (depends-on "ov")
 (depends-on "ht")
