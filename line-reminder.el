@@ -267,11 +267,13 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
   (let* ((msg (line-reminder--get-string-sign face))
          (len (length msg))
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
-         (display-string `(space :align-to (- ,fringe 2)))
-         (display-string (concat (propertize "." 'display display-string) msg))
+         (display-string `(space :align-to ,fringe))
+         (display-string (concat (propertize "" 'display display-string) msg))
          (ov (make-overlay (line-beginning-position) (line-end-position)))
          (window (selected-window)))
-    (put-text-property 0 1 'cursor t display-string)
+    (when (eq fringe 'right-fringe)
+      (put-text-property (line-beginning-position) (1+ (line-beginning-position))
+                         'cursor t display-string))
     (ov-set ov
             'after-string display-string
             'line-reminder-window window
@@ -665,6 +667,7 @@ and END."
     (`left-fringe  'right-fringe)
     (`right-fringe 'left-fringe)))
 
+
 (defun line-reminder--thumb-create-tty-ov (face fringe priority)
   "Create single tty thumbnail overlay with FACE in FRINGE with PRIORITY."
   (let* ((msg (line-reminder--get-string-sign face))
@@ -674,7 +677,8 @@ and END."
          (display-string (concat (propertize "." 'display display-string) msg))
          (ov (make-overlay (line-beginning-position) (line-end-position)))
          (window (selected-window)))
-    (put-text-property 0 1 'cursor t display-string)
+    (when (eq fringe 'right-fringe)
+      (put-text-property 0 1 'cursor t display-string))
     (ov-set ov
             'after-string display-string
             'line-reminder-thumb-window window
