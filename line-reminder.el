@@ -5,7 +5,7 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacs-vs/line-reminder
-;; Version: 0.5.1
+;; Version: 0.6.0
 ;; Package-Requires: ((emacs "25.1") (fringe-helper "1.0.1") (ov "1.0.6") (ht "2.0"))
 ;; Keywords: convenience annotation
 
@@ -269,11 +269,13 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,fringe 2)))
          (display-string (concat (propertize "." 'display display-string) msg))
-         (ov (make-overlay (line-beginning-position) (line-end-position))))
+         (ov (make-overlay (line-beginning-position) (line-end-position)))
+         (window (selected-window)))
     (put-text-property 0 1 'cursor t display-string)
     (ov-set ov
             'after-string display-string
-            'line-reminder-window (selected-window)
+            'line-reminder-window window
+            'window window
             'priority priority)
     ov))
 
@@ -284,11 +286,13 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
          ;; fringe will be on the previous visual line.
          (pos (if (= (line-end-position) pos) pos (1+ pos)))
          (display-string `(,fringe ,line-reminder-bitmap ,face))
-         (ov (make-overlay pos pos)))
+         (ov (make-overlay pos pos))
+         (window (selected-window)))
     (ov-set ov
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
-            'line-reminder-window (selected-window)
+            'line-reminder-window window
+            'window window
             'priority priority)
     ov))
 
@@ -668,11 +672,13 @@ and END."
          (msg (progn (add-face-text-property 0 len face nil msg) msg))
          (display-string `(space :align-to (- ,fringe 2)))
          (display-string (concat (propertize "." 'display display-string) msg))
-         (ov (make-overlay (line-beginning-position) (line-end-position))))
+         (ov (make-overlay (line-beginning-position) (line-end-position)))
+         (window (selected-window)))
     (put-text-property 0 1 'cursor t display-string)
     (ov-set ov
             'after-string display-string
-            'line-reminder-thumb-window (selected-window)
+            'line-reminder-thumb-window window
+            'window window
             'priority (1+ priority))
     ov))
 
@@ -683,11 +689,13 @@ and END."
          ;; fringe will be on the previous visual line.
          (pos (if (= (line-end-position) pos) pos (1+ pos)))
          (display-string `(,fringe ,line-reminder-thumbnail-bitmap ,face))
-         (ov (make-overlay pos pos)))
+         (ov (make-overlay pos pos))
+         (window (selected-window)))
     (ov-set ov
             'after-string (propertize "." 'display display-string)
             'fringe-helper t
-            'line-reminder-thumb-window (selected-window)
+            'line-reminder-thumb-window window
+            'window window
             'priority (1+ priority))
     ov))
 

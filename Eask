@@ -1,5 +1,5 @@
 (package "line-reminder"
-         "0.5.1"
+         "0.6.0"
          "Line annotation for changed and saved lines")
 
 (website-url "https://github.com/emacs-vs/line-reminder")
