@@ -215,7 +215,7 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
       (while (and (<= (point) wend) (not break))
         (when-let ((sign (ht-get line-reminder--line-status line))
                    ((if (functionp line-reminder-add-line-function)
-                        (funcall line-reminder-add-line-function)
+                        (funcall line-reminder-add-line-function line)
                       t)))
           (funcall callback line sign))
         (cl-incf line)                ; This saves up a lot of performance!
@@ -379,7 +379,7 @@ Argument LINE is passed in by `linum-format' variable."
     (`indicators ))  ; XXX: Nothing to do here.
   (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change nil t)
-  (add-hook 'after-change-functions #'line-reminder--after-change nil t)
+  (add-hook 'after-change-functions #'line-reminder--after-change 95 t)
   (add-hook 'post-command-hook #'line-reminder--undo-post-command nil t)
   ;; XXX: We add advice to `save-buffer', but we never need to remove it since
   ;; we have checked `line-reminder-mode' inside `line-reminder--save-buffer'
