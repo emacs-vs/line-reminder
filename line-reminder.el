@@ -667,7 +667,6 @@ and END."
     (`left-fringe  'right-fringe)
     (`right-fringe 'left-fringe)))
 
-
 (defun line-reminder--thumb-create-tty-ov (face fringe priority)
   "Create single tty thumbnail overlay with FACE in FRINGE with PRIORITY."
   (let* ((msg (line-reminder--get-string-sign face))
