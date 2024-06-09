@@ -156,6 +156,9 @@
 (defvar-local line-reminder--before-end-linum -1
   "Record down the before end line number.")
 
+(defvar-local line-reminder--render-this-command-p nil
+  "Set to non-nil if render current command.")
+
 (defvar-local line-reminder--undo-cancel-p nil
   "If non-nil, we should remove record of changes/saved lines for undo actions.")
 
@@ -380,7 +383,7 @@ Argument LINE is passed in by `linum-format' variable."
   (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change -95 t)
-  (add-hook 'post-command-hook #'line-reminder--undo-post-command nil t)
+  (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   ;; XXX: We add advice to `save-buffer', but we never need to remove it since
   ;; we have checked `line-reminder-mode' inside `line-reminder--save-buffer'
   ;; function.
@@ -397,7 +400,7 @@ Argument LINE is passed in by `linum-format' variable."
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder--before-change t)
   (remove-hook 'after-change-functions #'line-reminder--after-change t)
-  (remove-hook 'post-command-hook #'line-reminder--undo-post-command t)
+  (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (line-reminder-clear-reminder-lines-sign)
   ;; XXX: Don't use local for these hooks/functions, without the local flag
   ;; it will be much faster for large operations (paste, save, etc)
@@ -566,8 +569,19 @@ and END."
         (line-reminder--shift-all-lines starting-line delta-lines)
         (line-reminder--add-lines begin-linum end-linum))
 
-      (line-reminder--render-buffer)
-      (line-reminder--thumb-render-buffer))))
+      (setq line-reminder--render-this-command-p t))))
+
+(defun line-reminder--render-post-command ()
+  "Post command when rendering indicators."
+  (when line-reminder--render-this-command-p
+    (line-reminder--render-buffer)
+    (line-reminder--thumb-render-buffer)
+    (setq line-reminder--render-this-command-p nil)))
+
+(defun line-reminder--post-command ()
+  "Post command."
+  (line-reminder--render-post-command)
+  (line-reminder--undo-post-command))
 
 (defun line-reminder--render ()
   "Render indicator once."
