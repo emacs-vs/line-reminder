@@ -132,7 +132,7 @@
   :type 'function
   :group 'line-reminder)
 
-(defvar-local line-reminder--line-status (ht-create)
+(defvar-local line-reminder--line-status (make-hash-table)
   "Reocrd modified/saved lines' status in hash-table.")
 
 (defvar-local line-reminder--before-max-pt -1
@@ -465,7 +465,7 @@ and END."
 (defun line-reminder--shift-all-lines (start delta)
   "Shift all `change`/`saved` lines by from START line with DELTA."
   (unless (zerop delta)
-    (let ((new-ht (ht-create)))
+    (let ((new-ht (make-hash-table)))
       (ht-map (lambda (line sign)
                 (if (< start line)
                     (let ((new-line (+ line delta)))
@@ -732,7 +732,7 @@ and END."
     (when line-reminder--cache-max-line
       (let ((window-lines (float (max 0 (1- (window-text-height)))))
             (buffer-lines (float line-reminder--cache-max-line))
-            (guard (ht-create)) added start-point percent-line face)
+            (guard (make-hash-table)) added start-point percent-line face)
         (when (< window-lines buffer-lines)
           (save-excursion
             (goto-char (window-start))  ; start from 0 percent
