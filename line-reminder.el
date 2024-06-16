@@ -132,7 +132,7 @@
   :type 'function
   :group 'line-reminder)
 
-(defvar-local line-reminder--line-status (make-hash-table)
+(defvar-local line-reminder--line-status (make-hash-table :test 'equal)
   "Reocrd modified/saved lines' status in hash-table.")
 
 (defvar-local line-reminder--before-max-pt -1
