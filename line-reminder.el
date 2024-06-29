@@ -438,6 +438,10 @@ Argument LINE is passed in by `linum-format' variable."
   (line-reminder--delete-ovs)
   (line-reminder--thumb-delete-ovs))
 
+(defun line-reminder--temp-buffer-p ()
+  "Return non-nil if current buffer a temp buffer."
+  (string-prefix-p " *temp*" (or (buffer-name) "")))
+
 (defun line-reminder--custom-file-saving ()
   "Return t if we are saving `custom-file'."
   (and (or print-escape-control-characters inhibit-read-only)
@@ -447,11 +451,11 @@ Argument LINE is passed in by `linum-format' variable."
   "Return non-nil, if the conditions are matched.
 
 Arguments BEG and END are passed in by before/after change functions."
-  (and
-   (not (line-reminder--custom-file-saving))
-   (not buffer-read-only)
-   (not (memq this-command line-reminder-disable-commands))
-   (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
+  (and (not (line-reminder--temp-buffer-p))
+       (not (line-reminder--custom-file-saving))
+       (not buffer-read-only)
+       (not (memq this-command line-reminder-disable-commands))
+       (if (and beg end) (and (<= beg (point-max)) (<= end (point-max))) t)))
 
 (defmacro line-reminder--with-valid-situation (beg end &rest body)
   "Execute BODY around `line-reminder--valid-situation-p' function.
