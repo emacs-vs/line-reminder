@@ -10,6 +10,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 * perf: Render only display area (#28)
 * pref: Only render in post command (1892142ea12af1bbcbd7360eff7df9948e786548)
+* fix: Avoid temp buffers (60de6edca98457b72719bbc5176c22e2b41c9140)
 
 ## 0.5.2
 > Released Oct 27, 2023
