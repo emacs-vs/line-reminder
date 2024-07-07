@@ -208,7 +208,9 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
 
 (defun line-reminder--walk-window-lines (callback)
   "Walk through display window lines and execute CALLBACK on each line."
-  (let ((wend (window-end nil t))
+  (let ((wend (or (window-parameter nil 'window-end)
+                  (set-window-parameter nil 'window-end
+                                        (window-end nil t))))
         (wstart (window-start))
         (line)
         (break))
@@ -584,6 +586,7 @@ and END."
 
 (defun line-reminder--post-command ()
   "Post command."
+  (set-window-parameter nil 'window-end nil)
   (line-reminder--render-post-command)
   (line-reminder--undo-post-command))
 
