@@ -385,6 +385,7 @@ Argument LINE is passed in by `linum-format' variable."
   (ht-clear line-reminder--line-status)
   (add-hook 'before-change-functions #'line-reminder--before-change nil t)
   (add-hook 'after-change-functions #'line-reminder--after-change -95 t)
+  (add-hook 'pre-command-hook #'line-reminder--pre-command nil t)
   (add-hook 'post-command-hook #'line-reminder--post-command nil t)
   ;; XXX: We add advice to `save-buffer', but we never need to remove it since
   ;; we have checked `line-reminder-mode' inside `line-reminder--save-buffer'
@@ -402,6 +403,7 @@ Argument LINE is passed in by `linum-format' variable."
   "Disable `line-reminder' in current buffer."
   (remove-hook 'before-change-functions #'line-reminder--before-change t)
   (remove-hook 'after-change-functions #'line-reminder--after-change t)
+  (remove-hook 'pre-command-hook #'line-reminder--pre-command t)
   (remove-hook 'post-command-hook #'line-reminder--post-command t)
   (line-reminder-clear-reminder-lines-sign)
   ;; XXX: Don't use local for these hooks/functions, without the local flag
@@ -584,9 +586,12 @@ and END."
     (line-reminder--thumb-render-buffer)
     (setq line-reminder--render-this-command-p nil)))
 
+(defun line-reminder--pre-command ()
+  "Pre command."
+  (set-window-parameter nil 'window-end nil))
+
 (defun line-reminder--post-command ()
   "Post command."
-  (set-window-parameter nil 'window-end nil)
   (line-reminder--render-post-command)
   (line-reminder--undo-post-command))
 
