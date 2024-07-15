@@ -173,6 +173,8 @@
 (declare-function undo-tree-current "ext:undo-tree.el")
 (declare-function undo-tree-node-previous "ext:undo-tree.el")
 
+(defvar line-reminder-thumbnail)
+
 ;;
 ;; (@* "Util" )
 ;;
@@ -395,9 +397,7 @@ Argument LINE is passed in by `linum-format' variable."
   ;; it will be much faster for large operations (paste, save, etc)
   (progn
     (add-hook 'window-scroll-functions #'line-reminder--scroll)
-    (add-hook 'window-size-change-functions #'line-reminder--size-change)
-    (add-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
-    (add-hook 'window-size-change-functions #'line-reminder--thumb-size-change)))
+    (add-hook 'window-size-change-functions #'line-reminder--size-change)))
 
 (defun line-reminder--disable ()
   "Disable `line-reminder' in current buffer."
@@ -410,9 +410,7 @@ Argument LINE is passed in by `linum-format' variable."
   ;; it will be much faster for large operations (paste, save, etc)
   (progn
     (remove-hook 'window-scroll-functions #'line-reminder--scroll)
-    (remove-hook 'window-size-change-functions #'line-reminder--size-change)
-    (remove-hook 'window-scroll-functions #'line-reminder--thumb-scroll)
-    (remove-hook 'window-size-change-functions #'line-reminder--thumb-size-change)))
+    (remove-hook 'window-size-change-functions #'line-reminder--size-change)))
 
 ;;;###autoload
 (define-minor-mode line-reminder-mode
@@ -603,15 +601,21 @@ and END."
    (lambda (line sign)
      (line-reminder--mark-line line (line-reminder--get-face sign)))))
 
-(defun line-reminder--size-change (&optional frame &rest _)
+(defun line-reminder--size-change (&optional _frame &rest _)
   "Render for all visible windows from FRAME."
   (line-reminder--with-no-redisplay
-    (dolist (win (window-list frame)) (line-reminder--render-window win))))
+    (dolist (win (get-buffer-window-list))
+      (line-reminder--render-window win)
+      (when line-reminder-thumbnail
+        (line-reminder--thumb-render-window win)))))
 
 (defun line-reminder--scroll (&optional window &rest _)
   "Render on WINDOW."
   (line-reminder--with-no-redisplay
-    (line-reminder--render-window (or window (selected-window)))))
+    (let ((window (or window (selected-window))))
+      (line-reminder--render-window window)
+      (when line-reminder-thumbnail
+        (line-reminder--thumb-render-window window)))))
 
 (defun line-reminder--render-buffer ()
   "Render indicators for current buffer."
@@ -765,17 +769,6 @@ and END."
                    (ht-set guard percent-line
                            `(,sign . ,(line-reminder--thumb-create-ov face))))))
              line-reminder--line-status)))))))
-
-(defun line-reminder--thumb-size-change (&optional _frame &rest _)
-  "Render thumbnail for all visible windows in FRAME."
-  (line-reminder--with-no-redisplay
-    (dolist (win (get-buffer-window-list))
-      (line-reminder--thumb-render-window win))))
-
-(defun line-reminder--thumb-scroll (&optional window &rest _)
-  "Render thumbnail on WINDOW."
-  (line-reminder--with-no-redisplay
-    (line-reminder--thumb-render-window (or window (selected-window)))))
 
 (defun line-reminder--thumb-render-buffer ()
   "Render indicators for current buffer."
