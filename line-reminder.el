@@ -766,10 +766,11 @@ and END."
                            `(,sign . ,(line-reminder--thumb-create-ov face))))))
              line-reminder--line-status)))))))
 
-(defun line-reminder--thumb-size-change (&optional frame &rest _)
+(defun line-reminder--thumb-size-change (&optional _frame &rest _)
   "Render thumbnail for all visible windows in FRAME."
   (line-reminder--with-no-redisplay
-    (dolist (win (window-list frame)) (line-reminder--thumb-render-window win))))
+    (dolist (win (get-buffer-window-list))
+      (line-reminder--thumb-render-window win))))
 
 (defun line-reminder--thumb-scroll (&optional window &rest _)
   "Render thumbnail on WINDOW."
