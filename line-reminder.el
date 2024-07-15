@@ -593,10 +593,10 @@ and END."
    (lambda (line sign)
      (line-reminder--mark-line line (line-reminder--get-face sign)))))
 
-(defun line-reminder--size-change (&optional _frame &rest _)
+(defun line-reminder--size-change (&optional frame &rest _)
   "Render for all visible windows from FRAME."
   (line-reminder--with-no-redisplay
-    (dolist (win (get-buffer-window-list))
+    (dolist (win (window-list frame))
       (line-reminder--render-window win)
       (when line-reminder-thumbnail
         (line-reminder--thumb-render-window win)))))
