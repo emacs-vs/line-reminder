@@ -14,3 +14,6 @@ dist/
 # packaging
 *-autoloads.el
 *-pkg.el
+
+# OS generated
+.DS_Store
