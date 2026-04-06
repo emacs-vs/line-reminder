@@ -277,8 +277,7 @@ If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
          (ov (make-overlay (line-beginning-position) (line-end-position)))
          (window (selected-window)))
     (when (eq fringe 'right-fringe)
-      (put-text-property (line-beginning-position) (1+ (line-beginning-position))
-                         'cursor t display-string))
+      (put-text-property 0 1 'cursor t display-string))
     (ov-set ov
             'after-string display-string
             'line-reminder-window window
