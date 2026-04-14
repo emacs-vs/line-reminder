@@ -134,6 +134,7 @@
 
 (defvar-local line-reminder--line-status (make-hash-table :test 'equal)
   "Reocrd modified/saved lines' status in hash-table.")
+(put 'line-reminder--line-status 'permanent-local t)
 
 (defvar-local line-reminder--before-max-pt -1
   "Record down the point max for out of range calculation.")
