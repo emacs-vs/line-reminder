@@ -218,10 +218,10 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
       (goto-char wstart)
       (setq line (line-reminder--line-number-at-pos))  ; Only call this one time!
       (while (and (<= (point) wend) (not break))
-        (when-let ((sign (ht-get line-reminder--line-status line))
-                   ((if (functionp line-reminder-add-line-function)
-                        (funcall line-reminder-add-line-function line)
-                      t)))
+        (when-let* ((sign (ht-get line-reminder--line-status line))
+                    ((if (functionp line-reminder-add-line-function)
+                         (funcall line-reminder-add-line-function line)
+                       t)))
           (funcall callback line sign))
         (cl-incf line)                ; This saves up a lot of performance!
         (when (eobp) (setq break t))  ; This make it run the last line!
@@ -256,7 +256,7 @@ See macro `with-selected-window' description for arguments WINDOW and BODY."
 
 If optional argument THUMBNAIL is non-nil, return in thumbnail faces."
   (cond ((numberp sign)
-         (when-let ((sign (ht-get line-reminder--line-status sign)))
+         (when-let* ((sign (ht-get line-reminder--line-status sign)))
            (line-reminder--get-face sign thumbnail)))
         (thumbnail
          (cl-case sign
